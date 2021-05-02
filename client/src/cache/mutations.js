@@ -37,6 +37,35 @@ export const LOGOUT = gql`
 	}
 `;
 
+export const ADD_MAP_LIST = gql`
+    mutation AddMapList($region: regionInput!) {
+        addMapList(region: $region) {
+			_id
+			owner
+			parent
+			name
+			capital
+			leader
+			landmarks
+			child
+        }
+    }
+`;
+export const REMOVE_MAP_LIST = gql`
+	mutation RemoveMapList($_id: String!) {
+		removeMapList(_id: $_id)
+	}
+`;
+export const UPDATE_MAP_LIST = gql`
+	mutation UpdateMapList($_id: String!, $field: String!, $value: String!) {
+		updateMapList(_id: $_id, field: $field, value: $value) 
+	}
+`;
+
+
+
+
+
 export const ADD_ITEM = gql`
 	mutation AddItem($item: ItemInput!, $_id: String!, $index: Int!) {
 		addItem(item: $item, _id: $_id, index: $index)

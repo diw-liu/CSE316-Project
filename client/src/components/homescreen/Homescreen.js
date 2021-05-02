@@ -1,14 +1,17 @@
 import Logo 							from '../navbar/Logo';
 import Login 							from '../modals/Login';
-import Delete 							from '../modals/Delete';
+// import Delete 							from '../modals/Delete';
+import ViewerContent					from '../viewer/ViewerContent';
+import SpreadSheet						from '../main/SpreadSheet'
+import HomePage							from '../homepage/HomePage';
 import MainContents 					from '../main/MainContents';
 import CreateAccount 					from '../modals/CreateAccount';
 import Update 							from '../modals/Update';
 import NavbarOptions 					from '../navbar/NavbarOptions';
 import * as mutations 					from '../../cache/mutations';
 import SidebarContents 					from '../sidebar/SidebarContents';
-import { GET_DB_TODOS } 				from '../../cache/queries';
-import React, { useState } 				from 'react';
+import { GET_DB_MAP} 		from '../../cache/queries';
+import React, { Children, useEffect, useState } 				from 'react';
 import { useMutation, useQuery } 		from '@apollo/client';
 import { WNavbar, WSidebar, WNavItem } 	from 'wt-frontend';
 import { WLayout, WLHeader, WLMain, WLSide } from 'wt-frontend';
@@ -36,10 +39,16 @@ const Homescreen = (props) => {
 
 	const auth = props.user === null ? false : true;
 	let todolists 	= [];
+
+	let totalMap = [];
+	let homeMap = [];
+	let subMap = [];
+
 	let SidebarData = [];
 	const [sortRule, setSortRule] = useState('unsorted'); // 1 is ascending, -1 desc
 
 	const [activeList, setActiveList] 		= useState({});
+	const [viewer, toggleViewer]			= useState('');
 	const [showDelete, toggleShowDelete] 	= useState(false);
 	const [showLogin, toggleShowLogin] 		= useState(false);
 	const [showCreate, toggleShowCreate] 	= useState(false);
@@ -48,52 +57,88 @@ const Homescreen = (props) => {
 	const [canUndo, setCanUndo] = useState(props.tps.hasTransactionToUndo());
 	const [canRedo, setCanRedo] = useState(props.tps.hasTransactionToRedo());
 
-	const { loading, error, data, refetch } = useQuery(GET_DB_TODOS);
-
-	if(loading) { console.log(loading, 'loading'); }
+	const { loading, error, data, refetch } = useQuery(GET_DB_MAP);
+	
+	if(loading) { console.log(loading, 'loading');  }
 	if(error) { console.log(error, 'error'); }
 	if(data) { 
-		// Assign todolists 
-		for(let todo of data.getAllTodos) {
-			todolists.push(todo)
-		}
-		// if a list is selected, shift it to front of todolists
-		if(activeList._id) {
-			let selectedListIndex = todolists.findIndex(entry => entry._id === activeList._id);
-			let removed = todolists.splice(selectedListIndex, 1);
-			todolists.unshift(removed[0]);
-		}
-		// create data for sidebar links
-		for(let todo of todolists) {
-			if(todo) {
-				SidebarData.push({_id: todo._id, name: todo.name});
-			}	
-		}
+			for(let map of data.getHomeMapList) {
+				if(map.parent=="Home") homeMap.push(map);
+				totalMap.push(map)
+			}
+
+			if(Object.entries(activeList).length !== 0 ){
+				let tempID = activeList._id;
+				let list = totalMap.find(list => list._id === tempID);
+
+				if(list._id && list.child !== undefined) {
+					list.child.forEach((region1) => {
+						totalMap.forEach((region2) =>{
+							if (region1 == region2._id){
+								subMap.push(region2)
+							}})
+						}
+					)
+				} 
+			}
 	}
+	// 	// Assign todolists 
+	// 	// console.log(data.getHomeMapList)
+	// 	for(let map of data.getHomeMapList) {
+	// 		if(map.parent=="Home") homeMap.push(map);
+	// 		totalMap.push(map)
+	// 	}
+		
+	// 	// console.log(maplists)
+	// 	// if a list is selected, shift it to front of todolists
+	// 	// if(activeList._id) {
+	// 	// 	let selectedListIndex = todolists.findIndex(entry => entry._id === activeList._id);
+	// 	// 	let removed = todolists.splice(selectedListIndex, 1);
+	// 	// 	todolists.unshift(removed[0]);
+	// 	// }
+	// 	// create data for sidebar links
+	// 	if(activeList._id) {
+	// 		if (activeList.child !== undefined){
+	// 			activeList.child.forEach((region1) => {
+	// 				totalMap.forEach((region2) =>{
+	// 					if (region1 == region2._id)
+	// 						subMap.push(region2)
+	// 					})
+	// 				}
+	// 			)
+	// 		}
+	// 	}
+	// 	console.log(totalMap);
+	// 	console.log(subMap);
+	// }
 
 
 	
 	// NOTE: might not need to be async
-	const reloadList = async () => {
-		if (activeList._id) {
-			let tempID = activeList._id;
-			let list = todolists.find(list => list._id === tempID);
-			setActiveList(list);
-		}
-	}
+	// const reloadList = () => {
+	// 	if (activeList._id) {
+	// 		refetch();
+	// 		console.log('heeadad');
+	// 		let tempID = activeList._id;
+	// 		console.log(totalMap);
+	// 		let list = totalMap.find(list => list._id === tempID);
+	// 		console.log(list);
+	// 		setActiveList(list);
+	// 		// refetch();
+	// 	}
+	// }
 
 	const loadTodoList = (list) => {
-		props.tps.clearAllTransactions();
-		setCanUndo(props.tps.hasTransactionToUndo());
-		setCanRedo(props.tps.hasTransactionToRedo());
+		// props.tps.clearAllTransactions();
+		// setCanUndo(props.tps.hasTransactionToUndo());
+		// setCanRedo(props.tps.hasTransactionToRedo());
 		setActiveList(list);
-
 	}
 
 	const mutationOptions = {
-		refetchQueries: [{ query: GET_DB_TODOS }], 
+		refetchQueries: [{ query: GET_DB_MAP }], 
 		awaitRefetchQueries: true,
-		onCompleted: () => reloadList()
+		// onCompleted: () => reloadList()
 	}
 
 	const [ReorderTodoItems] 		= useMutation(mutations.REORDER_ITEMS, mutationOptions);
@@ -105,7 +150,9 @@ const Homescreen = (props) => {
 	const [AddTodolist] 			= useMutation(mutations.ADD_TODOLIST);
 	const [DeleteTodolist] 			= useMutation(mutations.DELETE_TODOLIST);
 
-
+	const [AddMapList]				= useMutation(mutations.ADD_MAP_LIST);
+	const [RemoveMapList]			= useMutation(mutations.REMOVE_MAP_LIST);
+	const [UpdateMapList]			= useMutation(mutations.UPDATE_MAP_LIST, mutationOptions);
 	
 	const tpsUndo = async () => {
 		const ret = await props.tps.undoTransaction();
@@ -176,6 +223,31 @@ const Homescreen = (props) => {
 
 	};
 
+	const addMapList = async (name, parent, sub) =>{
+		let region = {
+			_id: '',
+			owner: props.user._id,
+			parent: parent,
+			name: name,
+			capital: 'Unknown',
+			leader: 'Unknown',
+			landmarks: [],
+			child: []
+		}
+		const { data } = await AddMapList({ variables: { region: region } , refetchQueries: [{ query: GET_DB_MAP }]});
+		return data.addMapList._id
+	};
+
+	const removeMapList = async (_id) =>{
+		RemoveMapList({ variables: { _id: _id } , refetchQueries: [{ query: GET_DB_MAP }]});
+		setActiveList({})
+	};
+
+	const updateMapList = async (_id, field, value, keep) =>{
+		const { data } = await UpdateMapList({ variables: { _id: _id, field: field, value: value }});
+		// keep ? setActiveList() : setActiveList({})
+	}
+
 	const createNewList = async () => {
 		let list = {
 			_id: '',
@@ -185,14 +257,15 @@ const Homescreen = (props) => {
 			sortRule: 'task',
 			sortDirection: 1
 		}
-		const { data } = await AddTodolist({ variables: { todolist: list }, refetchQueries: [{ query: GET_DB_TODOS }] });
+		const { data } = await AddTodolist({ variables: { todolist: list } });
 		if(data) {
 			loadTodoList(data.addTodolist);
 		} 
 		
 	};
 	const deleteList = async (_id) => {
-		DeleteTodolist({ variables: { _id: _id }, refetchQueries: [{ query: GET_DB_TODOS }] });
+		console.log(_id);
+		DeleteTodolist({ variables: { _id: _id } });
 		loadTodoList({});
 	};
 
@@ -204,8 +277,8 @@ const Homescreen = (props) => {
 	};
 
 	const handleSetActive = (_id) => {
-		const selectedList = todolists.find(todo => todo._id === _id);
-		loadTodoList(selectedList);
+		const selectedList = totalMap.find(map => map._id === _id);
+		setActiveList(selectedList);
 	};
 
 	const setShowLogin = () => {
@@ -242,14 +315,22 @@ const Homescreen = (props) => {
 		tpsRedo();
 		
 	}
-
+	const logoClick = () =>{
+		console.log("hello");
+		let selectedListIndex = homeMap.findIndex(map => map._id === activeList._id);
+		console.log(selectedListIndex)
+		let removed = homeMap.splice(selectedListIndex, 1);
+		homeMap.unshift(removed[0]);
+		setActiveList({});
+	}
+	
 	return (
 		<WLayout wLayout="header">
 			<WLHeader>
 				<WNavbar color="colored">
 					<ul>
 						<WNavItem>
-							<Logo className='logo' />
+							<Logo className='logo' logoClick={logoClick} />
 						</WNavItem>
 					</ul>
 					<ul>
@@ -276,37 +357,49 @@ const Homescreen = (props) => {
 							<></>
 					}
 				</WSidebar>
-			</WLSide>
+			</WLSide> */}
+			
 			<WLMain>
-				{
-					activeList ? 
-					
+				{	// If there's activelist => spreadsheet, else home page
+					auth ? 
+						Object.entries(activeList).length !== 0 ?
+							viewer.length>0 ?
+								<div className="container-secondary">
+									<ViewerContent activeList={activeList} handleSetActive={handleSetActive} toggleViewer={toggleViewer}
+									viewer={viewer}/>
+								
+								</div>
+								:
+								<div className="container-secondary center" style={{padding:"1% 3% 3% 3%"}}>
+									<SpreadSheet addMapList={addMapList} removeMapList={removeMapList} updateMapList={updateMapList}
+									setActiveList={setActiveList}	activeList={activeList} subMap={subMap}	toggleViewer={toggleViewer}  
+									/>
+								</div>
+							:
 							<div className="container-secondary">
-								<MainContents
-									addItem={addItem} 				deleteItem={deleteItem}
-									editItem={editItem} 			reorderItem={reorderItem}
-									setShowDelete={setShowDelete} 	undo={tpsUndo} redo={tpsRedo}
-									activeList={activeList} 		setActiveList={loadTodoList}
-									canUndo={canUndo} 				canRedo={canRedo}
-									sort={sort}
-								/>
+								<div className=" center" >
+									<HomePage addMapList={addMapList} maplists={homeMap}
+									removeMapList={removeMapList} updateMapList={updateMapList}
+									setActiveList={setActiveList} activeList={activeList}		  
+									/>
+								</div>	
 							</div>
 						:
-							<div className="container-secondary" />
+						<div className="container-secondary" >
+							<div className="center" >
+								<h1>Welcome to the World Mapper</h1>
+							</div>		
+						</div>	
 				}
 
-			</WLMain> */}
-
-			{
-				showDelete && (<Delete deleteList={deleteList} activeid={activeList._id} setShowDelete={setShowDelete} />)
-			}
+			</WLMain> 
 
 			{
 				showCreate && (<CreateAccount fetchUser={props.fetchUser} setShowCreate={setShowCreate} />)
 			}
 
 			{
-				showLogin && (<Login fetchUser={props.fetchUser}  setShowLogin={setShowLogin} />)
+				showLogin && (<Login fetchUser={props.fetchUser}  reloadMap={refetch} setShowLogin={setShowLogin} />)
 			}
 			{
 				showUpdate && (<Update fetchUser={props.fetchUser}  setShowUpdate={setShowUpdate} user={props.user} />)

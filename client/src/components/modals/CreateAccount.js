@@ -67,12 +67,22 @@ const CreateAccount = (props) => {
 							/>
 					</WMMain>
 			}
+
 			<WMFooter>
-				<WButton className="modal-button" onClick={handleCreateAccount} span clickAnimation="ripple-light" hoverAnimation="darken" shape="rounded" color="primary">
-					Submit
-				</WButton>
+				<WRow>
+					<WCol size='4'> 
+						<WButton className="modal-button" onClick={handleCreateAccount} span clickAnimation="ripple-light" hoverAnimation="darken" shape="rounded" color="primary">
+							Submit
+						</WButton>
+					</WCol>
+					<WCol size="4"></WCol>
+					<WCol size='4'> 
+						<WButton className="modal-button" onClick={() => props.setShowCreate(false)} span clickAnimation="ripple-light" hoverAnimation="darken" shape="rounded" color="primary">
+							Cancel
+						</WButton>
+					</WCol>
+				</WRow>
 			</WMFooter>
-			
 		</WModal>
 	);
 }

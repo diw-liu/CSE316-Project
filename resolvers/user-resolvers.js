@@ -76,7 +76,6 @@ module.exports = {
 			@returns {object} the user object or an object with an error message
 		**/
 		update: async (_, args) => {
-			console.log("eadadad")
 			const {email, password, name, _id} = args;
 			const hashed = await bcrypt.hash(password, 10);
 			const id = new ObjectId(_id);

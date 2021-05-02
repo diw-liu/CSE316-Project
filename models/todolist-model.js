@@ -7,7 +7,6 @@ const todolistSchema = new Schema(
 			type: ObjectId,
 			required: true
 		},
-
 		name: {
 			type: String,
 			required: true

@@ -28,3 +28,19 @@ export const GET_DB_TODOS = gql`
 		}
 	}
 `;
+
+export const GET_DB_MAP = gql`
+	query GetDBMap {
+		getHomeMapList{
+			_id
+			owner
+			parent
+			name
+			capital
+			leader
+			landmarks
+			child
+		}
+	}
+`;
+

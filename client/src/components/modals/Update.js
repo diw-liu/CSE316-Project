@@ -3,12 +3,14 @@ import { UPDATE }			from '../../cache/mutations';
 import { useMutation }    	from '@apollo/client';
 
 import { WModal, WMHeader, WMMain, WMFooter, WButton, WInput, WRow, WCol } from 'wt-frontend';
+;
 
 const Update = (props) => {
 	const [input, setInput] = useState({ email: '', password: '', name:''});
 	const [loading, toggleLoading] = useState(false);
     const [Update] = useMutation(UPDATE);
-	
+	const user = props.user
+
 	const updateInput = (e) => {
 		const { name, value } = e.target;
 		const updated = { ...input, [name]: value };
@@ -44,29 +46,65 @@ const Update = (props) => {
 				loading ? <div />
 					: <WMMain>
                             <div className="modal-spacer">&nbsp;</div>
-							<WInput 
-								className="modal-input" onBlur={updateInput} name="name" labelAnimation="up" 
-								barAnimation="solid" labelText="Name" wType="outlined" inputType="text" 
-							/>
+							<WRow>
+								<WCol size="3">
+									<div className="table_header-section cancel-button">Name :</div>
+								</WCol>
+								<WCol size="9">
+									<WInput 
+										className="modal-input inline " onBlur={updateInput} name="name"
+										barAnimation="solid" placeholderText={user.name} wType="outlined" inputType="text" 
+									/>
+								</WCol>
+							</WRow>
+								
+								
+	
 							<div className="modal-spacer">&nbsp;</div>
-							<WInput 
-								className="modal-input" onBlur={updateInput} name="email" labelAnimation="up" 
-								barAnimation="solid" labelText="Email Address" wType="outlined" inputType="text" 
-							/>
+							<WRow>
+								<WCol size="3">
+									<div className="table_header-section cancel-button">Email :</div>
+								</WCol>
+								<WCol size="9">
+									<WInput 
+										className="modal-input inline" onBlur={updateInput} name="email"  
+										barAnimation="solid" placeholderText={user.email} wType="outlined" inputType="text" 
+									/>
+								</WCol>
+							</WRow>
+
+
 							<div className="modal-spacer">&nbsp;</div>
-							<WInput 
-								className="modal-input" onBlur={updateInput} name="password" labelAnimation="up" 
-								barAnimation="solid" labelText="Password" wType="outlined" inputType="password" 
-							/>
-					</WMMain>
+							<WRow>
+								<WCol size="3">
+									<div className="table_header-section cancel-button">Password :</div>
+								</WCol>
+								<WCol size="9">
+									<WInput 
+										className="modal-input " onBlur={updateInput} name="password" 
+										barAnimation="solid" placeholderText="***********s" wType="outlined" inputType="password" 
+									/>
+								</WCol>
+							</WRow>	
+							
+								
+
+						</WMMain>
 			}
 			<WMFooter>
-				<WButton className="modal-button" onClick={handleUpdateAccount} span clickAnimation="ripple-light" hoverAnimation="darken" shape="rounded" color="primary">
-					Update
-				</WButton>
-                <WButton className="modal-button" onClick={handleUpdateAccount} span clickAnimation="ripple-light" hoverAnimation="darken" shape="rounded" color="primary">
-					Cancel
-				</WButton>
+				<WRow>
+					<WCol size='4'> 
+						<WButton className="modal-button" onClick={handleUpdateAccount} span clickAnimation="ripple-light" hoverAnimation="darken" shape="rounded" color="primary">
+							Update
+						</WButton>
+					</WCol>
+					<WCol size="4"></WCol>
+					<WCol size='4'> 
+						<WButton className="modal-button" onClick={() => props.setShowUpdate(false)} span clickAnimation="ripple-light" hoverAnimation="darken" shape="rounded" color="primary">
+							Cancel
+						</WButton>
+					</WCol>
+				</WRow>
 			</WMFooter>
 			
 		</WModal>
