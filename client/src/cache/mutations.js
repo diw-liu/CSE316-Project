@@ -24,6 +24,7 @@ export const REGISTER = gql`
 export const UPDATE = gql`
 	mutation Update($email: String!, $password: String!, $name: String!, $_id: String!) {
 		update(email: $email, password: $password, name: $name, _id: $_id ) {
+			_id
 			email
 			password
 			name
@@ -46,6 +47,7 @@ export const ADD_MAP_LIST = gql`
 			name
 			capital
 			leader
+			sortDirection
 			landmarks
 			child
         }
@@ -61,9 +63,21 @@ export const UPDATE_MAP_LIST = gql`
 		updateMapList(_id: $_id, field: $field, value: $value) 
 	}
 `;
-
-
-
+export const MOVE_MAP_TOP = gql`
+	mutation MoveMapTop($_id: String!) {
+		moveMapTop(_id: $_id) 
+	}
+`;
+export const SORT_MAP_LIST = gql`
+	mutation SortMapList($_id:String!, $field:String!){
+		sortMapList(_id:$_id, field:$field)
+	}
+`;
+export const ADD_LANDMARK = gql`
+	mutation AddLandmark($_id:String!, $text:String!){
+		addLandmark(_id:$_id, text:$text)
+	}
+`;
 
 
 export const ADD_ITEM = gql`

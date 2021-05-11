@@ -6,10 +6,10 @@ const HomeContent = (props) =>{
         entries !== undefined && entries.length > 0 ?
         <div >
             {
-                entries.map((entry,index) =>(
+                entries.slice(0).reverse().map((entry,index) =>(
                     <HomeEntry
-                        data={entry} index={index} removeMapList={props.removeMapList}
-                        updateMapList={props.updateMapList} setActiveList={props.setActiveList}
+                        data={entry} index={index} setShowDelete={props.setShowDelete}
+                        updateMapList={props.updateMapList} handleSetActive={props.handleSetActive}
                     />
                 ))
             }

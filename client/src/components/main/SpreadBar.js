@@ -6,13 +6,13 @@ const SpreadBar = (props) =>{
         <WRow className="table-header" style={{ backgroundColor: "#AD0E0E" }}>
             <WCol size="1"> </WCol>
             <WCol size="2">
-                <WButton className='table-header-section' wType="texted" > Name </WButton>
+                <WButton className='table-header-section' wType="texted" onClick={() =>props.sortMapList(props.activeList._id, 'name')}> Name </WButton>
             </WCol>
             <WCol size="2">
-                <WButton className='table-header-section' wType="texted" > Capital </WButton>
+                <WButton className='table-header-section' wType="texted" onClick={() =>props.sortMapList(props.activeList._id, 'capital')}> Capital </WButton>
             </WCol>
             <WCol size="2">
-                <WButton className='table-header-section' wType="texted" > Leader </WButton>
+                <WButton className='table-header-section' wType="texted" onClick={() =>props.sortMapList(props.activeList._id, 'leader')}> Leader </WButton>
             </WCol>
             <WCol size="2">
                 <WButton className='table-header-section' wType="texted" > Flag </WButton>

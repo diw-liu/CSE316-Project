@@ -11,7 +11,9 @@ const LoggedIn = (props) => {
         Logout();
         const { data } = await props.fetchUser();
         if (data) {
+            // props.handleSetActive({})
             let reset = await client.resetStore();
+            if (reset) props.handleSetActive({});
         }
     };
 
@@ -54,7 +56,8 @@ const NavbarOptions = (props) => {
         <>
             {
                 props.auth === false ? <LoggedOut setShowLogin={props.setShowLogin} setShowCreate={props.setShowCreate}  />
-                : <LoggedIn fetchUser={props.fetchUser} logout={props.logout} setShowUpdate={props.setShowUpdate} user={props.user}/>
+                : <LoggedIn fetchUser={props.fetchUser} logout={props.logout} setShowUpdate={props.setShowUpdate} 
+                    user={props.user} handleSetActive={props.handleSetActive}/>
             }
         </>
 

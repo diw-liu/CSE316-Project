@@ -1,13 +1,14 @@
 import React, { useState }                       from 'react';
-import { WButton, WInput, WRow, WCol, WNavItem } from 'wt-frontend';
+import { WButton, WInput, WRow, WCol } from 'wt-frontend';
+
 const HomeEntry = (props) =>{
-    // console.log(props.data._id);
 
     const [renamingMap, toggleMap] = useState(false);
     const [preEdit, setPreEdit] = useState(props.name);
     
     const handleDeleteMap = async (e) =>{
-       props.removeMapList(props.data._id)
+        console.log(props.data)
+        props.setShowDelete(props.data._id)
     } 
 
     const handleEditing = async (e) =>{
@@ -23,7 +24,7 @@ const HomeEntry = (props) =>{
 
     const handleSpreadSheet = async (e) =>{
         console.log(props.data);
-        props.setActiveList(props.data);
+        props.handleSetActive(props.data._id);
     }
 
     return(
@@ -49,7 +50,6 @@ const HomeEntry = (props) =>{
                         <i className="material-icons">drive_file_rename_outline</i>
                     </WButton>
                 </div>
-                
             </WCol>
         </WRow>
     )

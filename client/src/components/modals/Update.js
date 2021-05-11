@@ -30,7 +30,12 @@ const Update = (props) => {
 		if (data) {
 			console.log(data)
 			toggleLoading(false);
-			props.fetchUser();
+			if(data.update.email === 'already exists') {
+				alert('User with that email already registered');
+			}
+			else {
+				props.fetchUser();
+			}
 			props.setShowUpdate(false);
 
 		};

@@ -22,7 +22,38 @@ module.exports = {
 				return (maplist);
 			}
 		},
-        // getMapList: Region
+        /** 
+		 	@param 	 {object} args - a region id
+			@returns {array} array of tuple [landmark, current (if the landmark is in the current region)]
+		**/
+		getLandmark: async (_, args) => {
+			console.log("Hello landmark")
+			const { _id } = args;
+			let landmark = [];
+			let region = [_id];
+			while(region.length!=0){
+				const objectId = new ObjectId(region[0]);
+				const found = await Region.findOne({_id:objectId});
+				if(found != null && found.child.length != 0){
+					region.push(...found.child);
+				}
+
+				if(found != null && found.landmarks.length != 0){
+					for(var i = 0; i<found.landmarks.length; i++){
+						if(objectId == _id){
+							landmark.push({landmark: found.landmarks[i], current: true});
+						} else {
+							landmark.push({landmark: found.landmarks[i], current: false});
+						}
+					}
+				}
+				region.shift();
+			}
+			if(landmark){
+				console.log(landmark);
+				return landmark;
+			}	
+		},
 	},
     Mutation: {
         /**
@@ -31,16 +62,18 @@ module.exports = {
          * @return {Region} 
          */
 		 addMapList: async (_, args) => {
+			console.log("dadads");
 			const { region } = args;
 			const objectId1 = new ObjectId();
-			const { _id, owner, parent, name, capital, leader, landmarks, child} = region;
+			const { _id, owner, parent, name, capital, leader, sortDirection, landmarks, child} = region;
 			const newR = new Region({
 				_id: objectId1,
 				owner: owner,
 				parent: parent,
 				name: name,
-				capital:capital,
+				capital: capital,
 				leader: leader,
+				sortDirection: sortDirection,
 				landmarks: landmarks,
 				child: child
 			});
@@ -58,9 +91,22 @@ module.exports = {
          */
 		 removeMapList: async (_, args) => {
 			const { _id } = args;
-			const objectId = new ObjectId(_id);
-			const deleted = await Region.deleteOne({_id: objectId});
-			if(deleted) return true;
+			let deleteList = [];
+			deleteList.push(_id);
+			let flag;
+			while(deleteList.length!=0){
+				console.log(deleteList[0])
+				const objectId = new ObjectId(deleteList[0]);
+				const found = await Region.findOne({_id: objectId});
+				console.log(found)
+				if(found != null && found.child.length!=0){
+					deleteList.push(...found.child);
+				}
+				flag = await Region.deleteOne({_id: objectId});
+				deleteList.shift();
+				if (flag) console.log("remove yes")
+			}
+			if(flag) return true;
 			else return false;
 		},
 
@@ -82,13 +128,84 @@ module.exports = {
 			else return '';
 		},
 
-		// /**
-		//  * @param {object} args contain _id, value
-		//  * @return {array}
-		//  */
-		// updateChildList: async(_, args) =>{
+		/**
+		 * @param {object} args _id
+		 * @return {boolean}
+		 */
+		moveMapTop: async (_, args) => {
+			const {_id} = args;
+			const listId = new ObjectId(_id);
+			const found = await Region.findOne({_id: listId});
+			const removed = await Region.deleteOne({_id: listId});
+			const newList = new Region({
+				_id: listId,
+				owner: found.owner,
+				parent: found.parent,
+				name: found.name,
+				capital:found.capital,
+				leader: found.leader,
+				sortDirection: found.sortDirection,
+				landmarks: found.landmarks,
+				child: found.child
+			}); 
+			const updated = newList.save();
+			console.log("movetopfinish");
+			console.log(updated);
+			if(updated) return true;
+			return false;
+		},
 
-		// }
+		/**
+		 * @param {object} args _id, field
+		 * @return {[Region]} array of region
+		 */
+		sortMapList: async (_, args) => {
+			const {_id, field} = args;
+			
+			const regionId = new ObjectId(_id);
+			const found = await Region.findOne({_id:regionId});
+			let newDirection = found.sortDirection === 1 ? -1 : 1;
+			console.log(newDirection, found.sortDirection);
+			let temp=[];
+			
+			console.log(found.child)
+			for(var i=0; i<found.child.length;i++){
+				let sub = await Region.findOne({_id:found.child[i]});
+				if(sub!=null){
+					temp.push(sub);
+				}
+			}
+			
+			if(newDirection === 1) 
+				temp.sort((a,b) => a[field].toUpperCase() > b[field].toUpperCase() ? 1 : -1);
+			else 
+				temp.sort((a,b) => a[field].toUpperCase() < b[field].toUpperCase() ? 1 : -1);
+			
+			let sortedString=[];
+			for(var i=0; i<temp.length;i++){
+				sortedString.push(temp[i]._id);
+			}
+			const updated = await Region.updateOne({_id: regionId}, { sortDirection: newDirection, child: sortedString })
+			if(updated) return sortedString;
+		},
+
+		/**
+		 * @param {object} args _id, text
+		 * @return {booleab} true if added sucessfully
+		 */
+		addLandmark: async (_, args) => {
+			const {_id, text} = args;
+			const regionId = new ObjectId(_id);
+			const found = await Region.findOne({_id:regionId});
+			// console.log(found.landmarks)
+			const final = [...found.landmarks, text]
+			console.log(final)
+			const updated = await Region.updateOne({_id:regionId},{landmarks:final})
+			if(updated) {
+				console.log(updated)
+				return true;
+			}
+		}
     }
 	// Query: {
 	// 	/** 

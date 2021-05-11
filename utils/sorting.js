@@ -1,5 +1,5 @@
-const byTask = (items, direction) => {
-	if(direction === 1) items.sort((a,b) => a.description.toUpperCase() > b.description.toUpperCase() ? 1 : -1);
+const byTask = (sub, direction) => {
+	if(direction === 1) sub.sort((a,b) => a.description.toUpperCase() > b.description.toUpperCase() ? 1 : -1);
 	else items.sort((a,b) => a.description.toUpperCase() < b.description.toUpperCase() ? 1 : -1);
 	return items;
 }
@@ -18,11 +18,5 @@ const byStatus = (items, direction) => {
 	
 }
 
-const byAssignedTo = (items, direction) =>{
-	if(direction === 1) items.sort((a,b) => a.assigned_to.toUpperCase() > b.assigned_to.toUpperCase() ? 1 : -1);
-	else items.sort((a,b) => a.assigned_to.toUpperCase() < b.assigned_to.toUpperCase() ? 1 : -1);
-	return items
-	
-}
 
-module.exports = {byTask, byDueDate, byStatus, byAssignedTo}
+module.exports = {byTask, byDueDate, byStatus}

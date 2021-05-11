@@ -1,20 +1,21 @@
 import Logo 							from '../navbar/Logo';
+import NavbarOptions 					from '../navbar/NavbarOptions';
+import Arrows							from '../navbar/Arrows'
+import AncestorList						from '../navbar/AncestorList'
 import Login 							from '../modals/Login';
-// import Delete 							from '../modals/Delete';
+import Delete 							from '../modals/Delete';
+import Update 							from '../modals/Update';
+import CreateAccount 					from '../modals/CreateAccount';
 import ViewerContent					from '../viewer/ViewerContent';
-import SpreadSheet						from '../main/SpreadSheet'
 import HomePage							from '../homepage/HomePage';
 import MainContents 					from '../main/MainContents';
-import CreateAccount 					from '../modals/CreateAccount';
-import Update 							from '../modals/Update';
-import NavbarOptions 					from '../navbar/NavbarOptions';
+import SpreadSheet						from '../main/SpreadSheet'
 import * as mutations 					from '../../cache/mutations';
-import SidebarContents 					from '../sidebar/SidebarContents';
-import { GET_DB_MAP} 		from '../../cache/queries';
-import React, { Children, useEffect, useState } 				from 'react';
+import { GET_DB_MAP} 					from '../../cache/queries';
+import React, { useState } 				from 'react';
 import { useMutation, useQuery } 		from '@apollo/client';
-import { WNavbar, WSidebar, WNavItem } 	from 'wt-frontend';
-import { WLayout, WLHeader, WLMain, WLSide } from 'wt-frontend';
+import { WNavbar, WNavItem } 			from 'wt-frontend';
+import { WLayout, WLHeader, WLMain }	from 'wt-frontend';
 import { UpdateListField_Transaction, 
 	SortItems_Transaction,
 	UpdateListItems_Transaction, 
@@ -45,14 +46,14 @@ const Homescreen = (props) => {
 	let subMap = [];
 
 	let SidebarData = [];
-	const [sortRule, setSortRule] = useState('unsorted'); // 1 is ascending, -1 desc
-
+	const [sortRule, setSortRule] 			= useState('unsorted'); // 1 is ascending, -1 desc
+	const [clickedMap, setClickMap]			= useState([]);
 	const [activeList, setActiveList] 		= useState({});
 	const [viewer, toggleViewer]			= useState('');
-	const [showDelete, toggleShowDelete] 	= useState(false);
 	const [showLogin, toggleShowLogin] 		= useState(false);
 	const [showCreate, toggleShowCreate] 	= useState(false);
 	const [showUpdate, toggleShowUpdate] 	= useState(false);
+	const [showDelete, toggleShowDelete]	= useState("");
 
 	const [canUndo, setCanUndo] = useState(props.tps.hasTransactionToUndo());
 	const [canRedo, setCanRedo] = useState(props.tps.hasTransactionToRedo());
@@ -62,6 +63,7 @@ const Homescreen = (props) => {
 	if(loading) { console.log(loading, 'loading');  }
 	if(error) { console.log(error, 'error'); }
 	if(data) { 
+			
 			for(let map of data.getHomeMapList) {
 				if(map.parent=="Home") homeMap.push(map);
 				totalMap.push(map)
@@ -70,8 +72,7 @@ const Homescreen = (props) => {
 			if(Object.entries(activeList).length !== 0 ){
 				let tempID = activeList._id;
 				let list = totalMap.find(list => list._id === tempID);
-
-				if(list._id && list.child !== undefined) {
+				if(list !== undefined && list.child !== undefined) {
 					list.child.forEach((region1) => {
 						totalMap.forEach((region2) =>{
 							if (region1 == region2._id){
@@ -82,35 +83,6 @@ const Homescreen = (props) => {
 				} 
 			}
 	}
-	// 	// Assign todolists 
-	// 	// console.log(data.getHomeMapList)
-	// 	for(let map of data.getHomeMapList) {
-	// 		if(map.parent=="Home") homeMap.push(map);
-	// 		totalMap.push(map)
-	// 	}
-		
-	// 	// console.log(maplists)
-	// 	// if a list is selected, shift it to front of todolists
-	// 	// if(activeList._id) {
-	// 	// 	let selectedListIndex = todolists.findIndex(entry => entry._id === activeList._id);
-	// 	// 	let removed = todolists.splice(selectedListIndex, 1);
-	// 	// 	todolists.unshift(removed[0]);
-	// 	// }
-	// 	// create data for sidebar links
-	// 	if(activeList._id) {
-	// 		if (activeList.child !== undefined){
-	// 			activeList.child.forEach((region1) => {
-	// 				totalMap.forEach((region2) =>{
-	// 					if (region1 == region2._id)
-	// 						subMap.push(region2)
-	// 					})
-	// 				}
-	// 			)
-	// 		}
-	// 	}
-	// 	console.log(totalMap);
-	// 	console.log(subMap);
-	// }
 
 
 	
@@ -138,7 +110,6 @@ const Homescreen = (props) => {
 	const mutationOptions = {
 		refetchQueries: [{ query: GET_DB_MAP }], 
 		awaitRefetchQueries: true,
-		// onCompleted: () => reloadList()
 	}
 
 	const [ReorderTodoItems] 		= useMutation(mutations.REORDER_ITEMS, mutationOptions);
@@ -153,7 +124,9 @@ const Homescreen = (props) => {
 	const [AddMapList]				= useMutation(mutations.ADD_MAP_LIST);
 	const [RemoveMapList]			= useMutation(mutations.REMOVE_MAP_LIST);
 	const [UpdateMapList]			= useMutation(mutations.UPDATE_MAP_LIST, mutationOptions);
-	
+	const [MoveMapTop]				= useMutation(mutations.MOVE_MAP_TOP, mutationOptions);
+	const [SortMapList]				= useMutation(mutations.SORT_MAP_LIST, mutationOptions);
+
 	const tpsUndo = async () => {
 		const ret = await props.tps.undoTransaction();
 		if(ret) {
@@ -231,6 +204,7 @@ const Homescreen = (props) => {
 			name: name,
 			capital: 'Unknown',
 			leader: 'Unknown',
+			sortDirection: 1,
 			landmarks: [],
 			child: []
 		}
@@ -239,13 +213,20 @@ const Homescreen = (props) => {
 	};
 
 	const removeMapList = async (_id) =>{
-		RemoveMapList({ variables: { _id: _id } , refetchQueries: [{ query: GET_DB_MAP }]});
-		setActiveList({})
+		await RemoveMapList({ variables: { _id: _id } , refetchQueries: [{ query: GET_DB_MAP }]});
+		// setActiveList({})
 	};
 
 	const updateMapList = async (_id, field, value, keep) =>{
 		const { data } = await UpdateMapList({ variables: { _id: _id, field: field, value: value }});
 		// keep ? setActiveList() : setActiveList({})
+	}
+
+	const sortMapList = async (_id, field) =>{
+		// console.log(activeList);
+		// console.log(_id);
+		// console.log(field);
+		const { data } = await SortMapList({ variables: {_id: _id, field: field}});
 	}
 
 	const createNewList = async () => {
@@ -275,35 +256,33 @@ const Homescreen = (props) => {
 		tpsRedo();
 
 	};
-
-	const handleSetActive = (_id) => {
-		const selectedList = totalMap.find(map => map._id === _id);
-		setActiveList(selectedList);
-	};
-
+	
 	const setShowLogin = () => {
-		toggleShowDelete(false);
+		toggleShowDelete("");
 		toggleShowCreate(false);
+		toggleShowUpdate(false);
 		toggleShowLogin(!showLogin);
 	};
 
 	const setShowCreate = () => {
-		toggleShowDelete(false);
+		toggleShowDelete("");
 		toggleShowLogin(false);
+		toggleShowUpdate(false);
 		toggleShowCreate(!showCreate);
 	};
 
-	const setShowDelete = () => {
+	const setShowDelete = (_id) => {
 		toggleShowCreate(false);
 		toggleShowLogin(false);
-		toggleShowDelete(!showDelete)
+		toggleShowUpdate(false);
+		toggleShowDelete(_id)
 	};
 
 	const setShowUpdate = () => {
+		toggleShowDelete("");
 		toggleShowCreate(false);
 		toggleShowLogin(false);
 		toggleShowUpdate(!showUpdate)
-		console.log(showUpdate)
 	};
 	
 	const sort = (criteria) => {
@@ -314,14 +293,35 @@ const Homescreen = (props) => {
 		props.tps.addTransaction(transaction);
 		tpsRedo();
 		
-	}
-	const logoClick = () =>{
-		console.log("hello");
-		let selectedListIndex = homeMap.findIndex(map => map._id === activeList._id);
-		console.log(selectedListIndex)
-		let removed = homeMap.splice(selectedListIndex, 1);
-		homeMap.unshift(removed[0]);
-		setActiveList({});
+	};
+	
+	const handleSetActive = (id, index) =>{
+		if(Object.entries(id).length == 0){
+			setActiveList({});
+			setClickMap([])
+		}else{
+			const data = totalMap.find(list => list._id === id);
+			console.log("bf"+index)
+			console.log(clickedMap);
+			let temp=clickedMap
+			if(index != -1){
+				temp=clickedMap.slice(0,index);
+			}
+			temp.push(data);
+			this.setState({
+				
+			})
+			setActiveList(data);
+
+
+
+			
+			// console.log(clickedMap);
+			// if(data.parent=="Home"){
+			// const { result } = await MoveMapTop({ variables: { _id: data._id }});
+			// }
+			
+		}
 	}
 	
 	return (
@@ -330,57 +330,57 @@ const Homescreen = (props) => {
 				<WNavbar color="colored">
 					<ul>
 						<WNavItem>
-							<Logo className='logo' logoClick={logoClick} />
+							<Logo className='logo' handleSetActive={handleSetActive} toggleViewer={toggleViewer}/>
+						</WNavItem>
+					</ul>
+					<ul>
+						<WNavItem>
+							<AncestorList  clickedMap={clickedMap}
+								setClickMap={setClickMap} handleSetActive={handleSetActive} />
+						</WNavItem>
+					</ul>
+					<ul>
+						<WNavItem>
+							<Arrows viewer={viewer} activeList={activeList} totalMap={totalMap}
+								handleSetActive={handleSetActive}/>
 						</WNavItem>
 					</ul>
 					<ul>
 						<NavbarOptions
 							fetchUser={props.fetchUser} 	auth={auth} 
 							setShowCreate={setShowCreate} 	setShowLogin={setShowLogin}
-							reloadTodos={refetch} 			setActiveList={loadTodoList}
+							reloadTodos={refetch} 			handleSetActive={handleSetActive}
 							setShowUpdate={setShowUpdate}	user={props.user}
 						/>
 					</ul>
 				</WNavbar>
 			</WLHeader>
-
-			{/* <WLSide side="left">
-				<WSidebar>
-					{
-						activeList ? 
-							<SidebarContents
-								listIDs={SidebarData} 				activeid={activeList._id} auth={auth}
-								handleSetActive={handleSetActive} 	createNewList={createNewList}
-								updateListField={updateListField} 	key={activeList._id}
-							/>
-							:
-							<></>
-					}
-				</WSidebar>
-			</WLSide> */}
 			
 			<WLMain>
 				{	// If there's activelist => spreadsheet, else home page
 					auth ? 
 						Object.entries(activeList).length !== 0 ?
 							viewer.length>0 ?
-								<div className="container-secondary">
-									<ViewerContent activeList={activeList} handleSetActive={handleSetActive} toggleViewer={toggleViewer}
-									viewer={viewer}/>
+								<div className="container-secondary" style={{padding:"1% 3% 3% 3%"}}>
+									<ViewerContent activeList={activeList} viewer={viewer}
+										handleSetActive={handleSetActive} toggleViewer={toggleViewer}
+									/>
 								
 								</div>
 								:
 								<div className="container-secondary center" style={{padding:"1% 3% 3% 3%"}}>
-									<SpreadSheet addMapList={addMapList} removeMapList={removeMapList} updateMapList={updateMapList}
-									setActiveList={setActiveList}	activeList={activeList} subMap={subMap}	toggleViewer={toggleViewer}  
+									<SpreadSheet activeList={activeList} subMap={subMap} handleSetActive={handleSetActive} 
+										toggleViewer={toggleViewer}  setShowDelete={setShowDelete}
+										addMapList={addMapList} updateMapList={updateMapList}	
+										sortMapList={sortMapList}	
 									/>
 								</div>
 							:
 							<div className="container-secondary">
 								<div className=" center" >
-									<HomePage addMapList={addMapList} maplists={homeMap}
-									removeMapList={removeMapList} updateMapList={updateMapList}
-									setActiveList={setActiveList} activeList={activeList}		  
+									<HomePage  maplists={homeMap} activeList={activeList} setShowDelete={setShowDelete}	
+										handleSetActive={handleSetActive} 	  
+										removeMapList={removeMapList} updateMapList={updateMapList} addMapList={addMapList}
 									/>
 								</div>	
 							</div>
@@ -403,6 +403,9 @@ const Homescreen = (props) => {
 			}
 			{
 				showUpdate && (<Update fetchUser={props.fetchUser}  setShowUpdate={setShowUpdate} user={props.user} />)
+			}
+			{
+				showDelete && (<Delete showDelete={showDelete} setShowDelete={setShowDelete} removeMapList={removeMapList}/>)
 			}
 
 		</WLayout>

@@ -1,13 +1,14 @@
 import React, { useState }            from 'react';
-import { WCard, WInput, WLHeader, WButton, WLMain, WRow, WCol, WLayout } from 'wt-frontend';
-import WLFooter from 'wt-frontend/build/components/wlayout/WLFooter';
-import WLSide from 'wt-frontend/build/components/wlayout/WLSide';
-import HomeContent      from './HomeContent'
+import { WCard, WInput, WLHeader, WButton, WLMain, WLFooter, WLSide, WLayout } from 'wt-frontend';
+import HomeContent      from './HomeContent';
+
 const HomePage = (props) =>{
-    const name = '';
     const [addingNewMap, toggleNewMap] = useState(false);
    
     const handleCreateMap = async (e) =>{
+        if(e.target.value == ''){
+            return
+        }
         const name = e.target.value;
         props.addMapList(name, 'Home');
         toggleNewMap(!addingNewMap)
@@ -24,8 +25,8 @@ const HomePage = (props) =>{
                 </WLHeader>
 
                 <WLMain style={{ backgroundColor: "#353a44"}} className="table-entries">
-                    <HomeContent maplists={props.maplists} removeMapList={props.removeMapList}
-                      updateMapList={props.updateMapList} setActiveList={props.setActiveList}
+                    <HomeContent maplists={props.maplists} setShowDelete={props.setShowDelete}
+                      updateMapList={props.updateMapList} handleSetActive={props.handleSetActive}
                     />
                 </WLMain> 
                 
@@ -34,7 +35,7 @@ const HomePage = (props) =>{
                         
                         <WLFooter style={{backgroundColor: "#f13564"}}>
                         {
-                            addingNewMap || (addingNewMap && name=='')
+                            addingNewMap 
                             ?<WInput
                                 className="table-input" 
                                 onBlur={handleCreateMap} autoFocus={true} 

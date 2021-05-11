@@ -1,5 +1,4 @@
 const { model, Schema, ObjectId } = require('mongoose');
-// const Subregion = require('./subregion-model').schema;
 
 const region = new Schema(
     {
@@ -27,6 +26,10 @@ const region = new Schema(
             type: String,
             required: true
         },
+        sortDirection: {
+			type: Number, 
+			required: true
+		},
         landmarks:[String],
         child:[ObjectId]
     },

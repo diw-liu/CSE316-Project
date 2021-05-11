@@ -1,5 +1,6 @@
 import React            from 'react';
 import {  WLHeader, WButton, WLMain, WRow, WCol, WLayout, WLFooter } from 'wt-frontend';
+import unav from './unavailable_pic.png';
 
 const ViewerInfo = (props) =>{
     const data = props.data;
@@ -8,6 +9,7 @@ const ViewerInfo = (props) =>{
         props.handleSetActive(data.parent);
         props.toggleViewer('');
     } 
+
     console.log(data)
     return(
         <WLayout WLayout="header-footer" > 
@@ -22,10 +24,12 @@ const ViewerInfo = (props) =>{
                     </WButton>
                 </div>
             </WLHeader>
-            <WLMain>
-                <div style={{ width: "50%", height: "50%" }}>PlaceHolder</div>
+            <WLMain className=" center" >
+                <div>
+                    <img src={unav} alt="unavailable" style={{width:"100%",height:"100%",display:"block",backgroundColor: "#f13564"}}  />
+                </div>
             </WLMain>
-            <WLFooter style={{backgroundColor: "#f13564"}}>
+            <WLFooter>
                 <div className=' table-entries container-primary'>
                     <div className='table-entry'> Region Name: {data.name} </div>
                     <div className='table-entry'> Parent Region: 

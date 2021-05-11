@@ -8,9 +8,9 @@ const SpreadSheet = (props) =>{
         <div className='table' >
             <SpreadHead activeList={props.activeList}  disabled={!props.activeList._id} 
                 addMapList={props.addMapList} updateMapList={props.updateMapList} />
-            <SpreadContent child={props.subMap} setActiveList={props.setActiveList} 
-                toggleViewer={props.toggleViewer} activeList={props.activeList}
-                updateMapList={props.updateMapList}/>
+            <SpreadContent child={props.subMap} handleSetActive={props.handleSetActive} 
+                toggleViewer={props.toggleViewer} activeList={props.activeList} setShowDelete={props.setShowDelete}
+                updateMapList={props.updateMapList} removeMapList={props.removeMapList} sortMapList={props.sortMapList}/>
         </div>
     )
 }

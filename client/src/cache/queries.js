@@ -38,8 +38,18 @@ export const GET_DB_MAP = gql`
 			name
 			capital
 			leader
+			sortDirection
 			landmarks
 			child
+		}
+	}
+`;
+
+export const GET_LANDMARK = gql`
+	query GetLandmark($_id: String!) {
+		getLandmark(_id: $_id){
+			landmark
+			current
 		}
 	}
 `;
