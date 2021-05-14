@@ -1,4 +1,5 @@
 const { model, Schema, ObjectId } = require('mongoose');
+const Landmark = require('./landmark-model').schema;
 
 const region = new Schema(
     {
@@ -30,11 +31,11 @@ const region = new Schema(
 			type: Number, 
 			required: true
 		},
-        landmarks:[String],
+        landmarks:[Landmark],
         child:[ObjectId]
     },
     { timestamps: true }
 );
 
 const Region = model('Region',region);
-module.exports =Region;
+module.exports = Region;

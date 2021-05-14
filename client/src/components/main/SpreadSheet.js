@@ -7,10 +7,11 @@ const SpreadSheet = (props) =>{
     return(
         <div className='table' >
             <SpreadHead activeList={props.activeList}  disabled={!props.activeList._id} 
-                addMapList={props.addMapList} updateMapList={props.updateMapList} />
+                addMapList={props.addMapList} updateMapList={props.updateMapList} 
+                canUndo={props.canUndo} canRedo={props.canRedo} undo={props.tpsUndo} redo={props.tpsRedo}/>
             <SpreadContent child={props.subMap} handleSetActive={props.handleSetActive} 
                 toggleViewer={props.toggleViewer} activeList={props.activeList} setShowDelete={props.setShowDelete}
-                updateMapList={props.updateMapList} removeMapList={props.removeMapList} sortMapList={props.sortMapList}/>
+                editing={props.editing} setEditing={props.setEditing} updateMapList={props.updateMapList} removeMapList={props.removeMapList} sortMapList={props.sortMapList}/>
         </div>
     )
 }

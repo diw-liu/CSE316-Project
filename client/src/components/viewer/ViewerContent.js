@@ -15,7 +15,8 @@ const ViewerContent = (props) =>{
                 </WCol>
                 <WCol size='6'>
                     <WLSide>
-                        <ViewerTable data={props.activeList} totalMap={props.totalMap}/>
+                        <ViewerTable data={props.activeList} totalMap={props.totalMap}
+                            addLandmark={props.addLandmark}/>
                     </WLSide>
                 </WCol>
             </WRow>

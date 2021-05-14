@@ -39,7 +39,7 @@ export const LOGOUT = gql`
 `;
 
 export const ADD_MAP_LIST = gql`
-    mutation AddMapList($region: regionInput!) {
+    mutation AddMapList($region: RegionInput!) {
         addMapList(region: $region) {
 			_id
 			owner
@@ -48,14 +48,32 @@ export const ADD_MAP_LIST = gql`
 			capital
 			leader
 			sortDirection
-			landmarks
+			landmarks{
+				_id
+				region
+				name
+			}
 			child
         }
     }
 `;
 export const REMOVE_MAP_LIST = gql`
 	mutation RemoveMapList($_id: String!) {
-		removeMapList(_id: $_id)
+		removeMapList(_id: $_id){
+			_id
+			owner
+			parent
+			name
+			capital
+			leader
+			sortDirection
+			landmarks{
+				_id
+				region
+				name
+			}
+			child
+        }
 	}
 `;
 export const UPDATE_MAP_LIST = gql`
@@ -78,7 +96,16 @@ export const ADD_LANDMARK = gql`
 		addLandmark(_id:$_id, text:$text)
 	}
 `;
-
+export const REMOVE_LANDMARK = gql`
+	mutation RemoveLandmark($_id:String!, $text:String!){
+		removeLandmark(_id:$_id, text:$text)
+	}
+`;
+export const EDIT_LANDMARK = gql`
+	mutation EditLandmark($_id:String!, $prevText:String!, $targetText:String!){
+		editLandmark(_id:$_id, prevText:$prevText, targetText:$targetText)
+	}
+`;
 
 export const ADD_ITEM = gql`
 	mutation AddItem($item: ItemInput!, $_id: String!, $index: Int!) {

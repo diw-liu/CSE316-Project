@@ -23,7 +23,7 @@ const HomeEntry = (props) =>{
     }
 
     const handleSpreadSheet = async (e) =>{
-        console.log(props.data);
+        // console.log(props.data);
         props.handleSetActive(props.data._id);
     }
 

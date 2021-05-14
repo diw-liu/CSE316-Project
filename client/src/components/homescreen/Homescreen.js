@@ -16,15 +16,15 @@ import React, { useState } 				from 'react';
 import { useMutation, useQuery } 		from '@apollo/client';
 import { WNavbar, WNavItem } 			from 'wt-frontend';
 import { WLayout, WLHeader, WLMain }	from 'wt-frontend';
-import { UpdateListField_Transaction, 
-	SortItems_Transaction,
-	UpdateListItems_Transaction, 
-	ReorderItems_Transaction, 
-	EditItem_Transaction } 				from '../../utils/jsTPS';
+import { UpdateRegions_Transaction,
+	UpdateField_Transaction,
+	SortRegion_Transaction } 				from '../../utils/jsTPS';
 
 const Homescreen = (props) => {
 
 	const keyCombination = (e, callback) => {
+		console.log(e.code);
+		console.log(editing)
 		if(e.key === 'z' && e.ctrlKey) {
 			if(props.tps.hasTransactionToUndo()) {
 				tpsUndo();
@@ -35,9 +35,61 @@ const Homescreen = (props) => {
 				tpsRedo();
 			}
 		}
+		else if (editing.index!=-1||editing.field!=""){
+			console.log("Yes")
+			if(e.code === "ArrowDown"){
+				setEditing({
+					index:editing.index+1,
+					field:editing.field,
+				});
+			}else if(e.code === "ArrowUp"){
+				setEditing({
+					index:editing.index-1,
+					field:editing.field,
+				})
+			}else if(e.code === "ArrowLeft"){
+				if(editing.field=="Capital"){
+					setEditing({
+						index:editing.index,
+						field:"Name",
+					})
+				}else if(editing.field=="Leader"){
+					setEditing({
+						index:editing.index,
+						field:"Capital",
+					})
+				}
+			}else if(e.code === "ArrowRight"){
+				if(editing.field=="Name"){
+					setEditing({
+						index:editing.index,
+						field:"Capital",
+					})
+				}else if(editing.field=="Capital"){
+					setEditing({
+						index:editing.index,
+						field:"Leader",
+					})
+				}
+			}else if(e.code === "Enter"){
+				setEditing({
+					index:-1,
+					field:""
+				})
+			}
+		}
+	}
+	const mouseCheck = (e, callback) => {
+		console.log(e.button)
+		if(e.button==0){
+			setEditing({
+				index:-1,
+				field:""
+			})
+		}
 	}
 	document.onkeydown = keyCombination;
-
+	document.onmousedown = mouseCheck;
 	const auth = props.user === null ? false : true;
 	let todolists 	= [];
 
@@ -45,10 +97,9 @@ const Homescreen = (props) => {
 	let homeMap = [];
 	let subMap = [];
 
-	let SidebarData = [];
 	const [sortRule, setSortRule] 			= useState('unsorted'); // 1 is ascending, -1 desc
-	const [clickedMap, setClickMap]			= useState([]);
-	const [activeList, setActiveList] 		= useState({});
+	const [editing, setEditing]				= useState({ index:-1, field:''});
+	const [status, setStatus] 				= useState({ activeList:{}, clickedMap:[]});
 	const [viewer, toggleViewer]			= useState('');
 	const [showLogin, toggleShowLogin] 		= useState(false);
 	const [showCreate, toggleShowCreate] 	= useState(false);
@@ -63,14 +114,12 @@ const Homescreen = (props) => {
 	if(loading) { console.log(loading, 'loading');  }
 	if(error) { console.log(error, 'error'); }
 	if(data) { 
-			
 			for(let map of data.getHomeMapList) {
 				if(map.parent=="Home") homeMap.push(map);
 				totalMap.push(map)
 			}
-
-			if(Object.entries(activeList).length !== 0 ){
-				let tempID = activeList._id;
+			if(Object.entries(status.activeList).length !== 0 ){
+				let tempID = status.activeList._id;
 				let list = totalMap.find(list => list._id === tempID);
 				if(list !== undefined && list.child !== undefined) {
 					list.child.forEach((region1) => {
@@ -100,12 +149,12 @@ const Homescreen = (props) => {
 	// 	}
 	// }
 
-	const loadTodoList = (list) => {
-		// props.tps.clearAllTransactions();
-		// setCanUndo(props.tps.hasTransactionToUndo());
-		// setCanRedo(props.tps.hasTransactionToRedo());
-		setActiveList(list);
-	}
+	// const loadTodoList = (list) => {
+	// 	// props.tps.clearAllTransactions();
+	// 	// setCanUndo(props.tps.hasTransactionToUndo());
+	// 	// setCanRedo(props.tps.hasTransactionToRedo());
+	// 	setActiveList(list);
+	// }
 
 	const mutationOptions = {
 		refetchQueries: [{ query: GET_DB_MAP }], 
@@ -121,11 +170,12 @@ const Homescreen = (props) => {
 	const [AddTodolist] 			= useMutation(mutations.ADD_TODOLIST);
 	const [DeleteTodolist] 			= useMutation(mutations.DELETE_TODOLIST);
 
-	const [AddMapList]				= useMutation(mutations.ADD_MAP_LIST);
-	const [RemoveMapList]			= useMutation(mutations.REMOVE_MAP_LIST);
+	const [AddMapList]				= useMutation(mutations.ADD_MAP_LIST, mutationOptions);
+	const [RemoveMapList]			= useMutation(mutations.REMOVE_MAP_LIST, mutationOptions);
 	const [UpdateMapList]			= useMutation(mutations.UPDATE_MAP_LIST, mutationOptions);
 	const [MoveMapTop]				= useMutation(mutations.MOVE_MAP_TOP, mutationOptions);
 	const [SortMapList]				= useMutation(mutations.SORT_MAP_LIST, mutationOptions);
+	
 
 	const tpsUndo = async () => {
 		const ret = await props.tps.undoTransaction();
@@ -143,60 +193,60 @@ const Homescreen = (props) => {
 		}
 	}
 
-	const addItem = async () => {
-		let list = activeList;
-		const items = list.items;
-		const newItem = {
-			_id: '',
-			description: 'No Description',
-			due_date: 'No Date',
-			assigned_to: 'No One',
-			completed: false
-		};
-		let opcode = 1;
-		let itemID = newItem._id;
-		let listID = activeList._id;
-		let transaction = new UpdateListItems_Transaction(listID, itemID, newItem, opcode, AddTodoItem, DeleteTodoItem);
-		props.tps.addTransaction(transaction);
-		tpsRedo();
-	};
+	// const addItem = async () => {
+	// 	let list = activeList;
+	// 	const items = list.items;
+	// 	const newItem = {
+	// 		_id: '',
+	// 		description: 'No Description',
+	// 		due_date: 'No Date',
+	// 		assigned_to: 'No One',
+	// 		completed: false
+	// 	};
+	// 	let opcode = 1;
+	// 	let itemID = newItem._id;
+	// 	let listID = activeList._id;
+	// 	let transaction = new UpdateListItems_Transaction(listID, itemID, newItem, opcode, AddTodoItem, DeleteTodoItem);
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
+	// };
 
-	const deleteItem = async (item, index) => {
-		let listID = activeList._id;
-		let itemID = item._id;
-		let opcode = 0;
-		let itemToDelete = {
-			_id: item._id,
-			description: item.description,
-			due_date: item.due_date,
-			assigned_to: item.assigned_to,
-			completed: item.completed
-		}
-		let transaction = new UpdateListItems_Transaction(listID, itemID, itemToDelete, opcode, AddTodoItem, DeleteTodoItem, index);
-		props.tps.addTransaction(transaction);
-		tpsRedo();
+	// const deleteItem = async (item, index) => {
+	// 	let listID = activeList._id;
+	// 	let itemID = item._id;
+	// 	let opcode = 0;
+	// 	let itemToDelete = {
+	// 		_id: item._id,
+	// 		description: item.description,
+	// 		due_date: item.due_date,
+	// 		assigned_to: item.assigned_to,
+	// 		completed: item.completed
+	// 	}
+	// 	let transaction = new UpdateListItems_Transaction(listID, itemID, itemToDelete, opcode, AddTodoItem, DeleteTodoItem, index);
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
 
-	};
+	// };
 
-	const editItem = async (itemID, field, value, prev) => {
-		let flag = 0;
-		if (field === 'completed') flag = 1;
-		let listID = activeList._id;
-		let transaction = new EditItem_Transaction(listID, itemID, field, prev, value, flag, UpdateTodoItemField);
-		props.tps.addTransaction(transaction);
-		tpsRedo();
+	// const editItem = async (itemID, field, value, prev) => {
+	// 	let flag = 0;
+	// 	if (field === 'completed') flag = 1;
+	// 	let listID = activeList._id;
+	// 	let transaction = new EditItem_Transaction(listID, itemID, field, prev, value, flag, UpdateTodoItemField);
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
 
-	};
+	// };
 
-	const reorderItem = async (itemID, dir) => {
-		let listID = activeList._id;
-		let transaction = new ReorderItems_Transaction(listID, itemID, dir, ReorderTodoItems);
-		props.tps.addTransaction(transaction);
-		tpsRedo();
+	// const reorderItem = async (itemID, dir) => {
+	// 	let listID = activeList._id;
+	// 	let transaction = new ReorderItems_Transaction(listID, itemID, dir, ReorderTodoItems);
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
 
-	};
+	// };
 
-	const addMapList = async (name, parent, sub) =>{
+	const addMapList = async (name, parent) =>{
 		let region = {
 			_id: '',
 			owner: props.user._id,
@@ -208,54 +258,34 @@ const Homescreen = (props) => {
 			landmarks: [],
 			child: []
 		}
-		const { data } = await AddMapList({ variables: { region: region } , refetchQueries: [{ query: GET_DB_MAP }]});
-		return data.addMapList._id
+		const regionID = region._id;
+		const opcode = 1
+		let transaction = new UpdateRegions_Transaction(regionID, opcode, AddMapList, RemoveMapList, region)
+		props.tps.addTransaction(transaction);
+		tpsRedo();
 	};
 
 	const removeMapList = async (_id) =>{
-		await RemoveMapList({ variables: { _id: _id } , refetchQueries: [{ query: GET_DB_MAP }]});
-		// setActiveList({})
+		const regionID = _id;
+		const opcode = 0
+		let transaction = new UpdateRegions_Transaction(regionID, opcode, AddMapList, RemoveMapList)
+		props.tps.addTransaction(transaction);
+		tpsRedo();
 	};
 
-	const updateMapList = async (_id, field, value, keep) =>{
-		const { data } = await UpdateMapList({ variables: { _id: _id, field: field, value: value }});
-		// keep ? setActiveList() : setActiveList({})
+	const updateMapList = async (_id, field, prevValue, curValue) =>{
+		let transaction = new UpdateField_Transaction(_id, field, prevValue, curValue, UpdateMapList)
+		props.tps.addTransaction(transaction);
+		tpsRedo();
 	}
 
 	const sortMapList = async (_id, field) =>{
-		// console.log(activeList);
-		// console.log(_id);
-		// console.log(field);
-		const { data } = await SortMapList({ variables: {_id: _id, field: field}});
-	}
-
-	const createNewList = async () => {
-		let list = {
-			_id: '',
-			name: 'Untitled',
-			owner: props.user._id,
-			items: [],
-			sortRule: 'task',
-			sortDirection: 1
-		}
-		const { data } = await AddTodolist({ variables: { todolist: list } });
-		if(data) {
-			loadTodoList(data.addTodolist);
-		} 
-		
-	};
-	const deleteList = async (_id) => {
-		console.log(_id);
-		DeleteTodolist({ variables: { _id: _id } });
-		loadTodoList({});
-	};
-
-	const updateListField = async (_id, field, value, prev) => {
-		let transaction = new UpdateListField_Transaction(_id, field, prev, value, UpdateTodolistField);
+		let transaction = new SortRegion_Transaction(_id, field, SortMapList)
 		props.tps.addTransaction(transaction);
 		tpsRedo();
+	
+	}
 
-	};
 	
 	const setShowLogin = () => {
 		toggleShowDelete("");
@@ -285,42 +315,41 @@ const Homescreen = (props) => {
 		toggleShowUpdate(!showUpdate)
 	};
 	
-	const sort = (criteria) => {
-		let prevSortRule = sortRule;
-		setSortRule(criteria);
-		let transaction = new SortItems_Transaction(activeList._id, criteria, prevSortRule, sortTodoItems);
-		console.log(transaction)
-		props.tps.addTransaction(transaction);
-		tpsRedo();
+	// const sort = (criteria) => {
+	// 	let prevSortRule = sortRule;
+	// 	setSortRule(criteria);
+	// 	let transaction = new SortItems_Transaction(activeList._id, criteria, prevSortRule, sortTodoItems);
+	// 	console.log(transaction)
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
 		
-	};
+	// };
 	
 	const handleSetActive = (id, index) =>{
+		props.tps.clearAllTransactions()
 		if(Object.entries(id).length == 0){
-			setActiveList({});
-			setClickMap([])
+			setStatus({
+				activeList:{}, 
+				clickedMap:[],
+			})
 		}else{
 			const data = totalMap.find(list => list._id === id);
-			console.log("bf"+index)
-			console.log(clickedMap);
-			let temp=clickedMap
-			if(index != -1){
-				temp=clickedMap.slice(0,index);
+			console.log("bf"+id)
+
+			let temp=status.clickedMap
+
+			console.log(temp)
+			if(index >= 0 ){
+				temp=temp.slice(0,index);
+			}
+			if(index == -1){
+				temp=temp.slice(0,-1);
 			}
 			temp.push(data);
-			this.setState({
-				
-			})
-			setActiveList(data);
-
-
-
-			
-			// console.log(clickedMap);
-			// if(data.parent=="Home"){
-			// const { result } = await MoveMapTop({ variables: { _id: data._id }});
-			// }
-			
+			setStatus({
+				activeList:data,
+				clickedMap:temp,
+			})		
 		}
 	}
 	
@@ -332,20 +361,12 @@ const Homescreen = (props) => {
 						<WNavItem>
 							<Logo className='logo' handleSetActive={handleSetActive} toggleViewer={toggleViewer}/>
 						</WNavItem>
+						<AncestorList  status={status}  handleSetActive={handleSetActive}
+							toggleViewer={toggleViewer} />
 					</ul>
 					<ul>
-						<WNavItem>
-							<AncestorList  clickedMap={clickedMap}
-								setClickMap={setClickMap} handleSetActive={handleSetActive} />
-						</WNavItem>
-					</ul>
-					<ul>
-						<WNavItem>
-							<Arrows viewer={viewer} activeList={activeList} totalMap={totalMap}
-								handleSetActive={handleSetActive}/>
-						</WNavItem>
-					</ul>
-					<ul>
+						<Arrows viewer={viewer} status={status} totalMap={totalMap}
+							handleSetActive={handleSetActive} setStatus={setStatus}/>
 						<NavbarOptions
 							fetchUser={props.fetchUser} 	auth={auth} 
 							setShowCreate={setShowCreate} 	setShowLogin={setShowLogin}
@@ -359,26 +380,28 @@ const Homescreen = (props) => {
 			<WLMain>
 				{	// If there's activelist => spreadsheet, else home page
 					auth ? 
-						Object.entries(activeList).length !== 0 ?
+						Object.entries(status.activeList).length !== 0 ?
 							viewer.length>0 ?
 								<div className="container-secondary" style={{padding:"1% 3% 3% 3%"}}>
-									<ViewerContent activeList={activeList} viewer={viewer}
+									<ViewerContent activeList={status.activeList} viewer={viewer}
 										handleSetActive={handleSetActive} toggleViewer={toggleViewer}
+										
 									/>
 								
 								</div>
 								:
 								<div className="container-secondary center" style={{padding:"1% 3% 3% 3%"}}>
-									<SpreadSheet activeList={activeList} subMap={subMap} handleSetActive={handleSetActive} 
+									<SpreadSheet activeList={status.activeList} subMap={subMap}  editing={editing}
+										canUndo={canUndo} canRedo={canRedo} setEditing={setEditing} tpsUndo={tpsUndo} tpsRedo={tpsRedo}
 										toggleViewer={toggleViewer}  setShowDelete={setShowDelete}
 										addMapList={addMapList} updateMapList={updateMapList}	
-										sortMapList={sortMapList}	
+										sortMapList={sortMapList} handleSetActive={handleSetActive} 	
 									/>
 								</div>
 							:
 							<div className="container-secondary">
 								<div className=" center" >
-									<HomePage  maplists={homeMap} activeList={activeList} setShowDelete={setShowDelete}	
+									<HomePage  maplists={homeMap} activeList={status.activeList} setShowDelete={setShowDelete}	
 										handleSetActive={handleSetActive} 	  
 										removeMapList={removeMapList} updateMapList={updateMapList} addMapList={addMapList}
 									/>

@@ -1,25 +1,26 @@
 import React, { useState }              from 'react';
-import { useMutation, useQuery } 		from '@apollo/client';
+import { GET_LANDMARK} 					from '../../cache/queries';
 import * as mutations 					from '../../cache/mutations';
-import { GET_LANDMARK} 		            from '../../cache/queries';
+import { useMutation, useQuery } 		from '@apollo/client';
 import { WLayout, WLHeader, WLMain, WLFooter, WInput, WButton, WRow, WCol } from 'wt-frontend';
 import ViewerEntry                      from './ViewerEntry'
+
 const ViewerTable = (props) =>{
-    console.log(props.data)
+    // console.log(props.data)
     let entries
 
     const [landmark, changeLandmark] = useState("Enter Landmark Here");
-
+    
     const { loading, error, data, refetch } = useQuery(GET_LANDMARK, { variables: { _id : props.data._id } } );
     
     if(loading) { console.log(loading, 'loading');  }
 	if(error) { console.log(error, 'error'); }
 	if(data) { 
-        console.log(data);
+        // console.log(data);
         entries = data.getLandmark;
     }
 
-    console.log(entries);
+    // console.log(entries);
 
 
     const landMarkmutationOptions = {
@@ -27,17 +28,28 @@ const ViewerTable = (props) =>{
 		awaitRefetchQueries: true,
 	}
 
-    const [AddLandmark]              = useMutation(mutations.ADD_LANDMARK, landMarkmutationOptions);
+    const [AddLandmark]             = useMutation(mutations.ADD_LANDMARK, landMarkmutationOptions);
+    const [RemoveLandmark]          = useMutation(mutations.REMOVE_LANDMARK, landMarkmutationOptions);
+    const [EditLandmark]          = useMutation(mutations.EDIT_LANDMARK, landMarkmutationOptions);
 
-    const handleAddLandmark = async (e) =>{
+    const addLandmark = async (e) =>{
         e.preventDefault();
-        console.log(landmark);
-        const { data } = await AddLandmark({ variables: {_id: props.data._id, text: landmark}});
+        // console.log("handle alm");
+        const { data } = await AddLandmark({ variables:{_id: props.data._id, text: landmark}});
         changeLandmark("Enter Landmark Here");
     }
-    
+
     const handleChange = async (e) =>{
         changeLandmark(e.target.value);
+    }
+
+    const removeLandmark = async (text) =>{
+        // console.log("Atleast we are here")
+        // console.log(props.data._id);
+        const {data} = await RemoveLandmark({ variables:{ _id: props.data._id, text: text}});
+    }
+    const editLandmark = async (prevText, targetText) =>{
+        const {data} = await EditLandmark({variables:{_id: props.data._id, prevText: prevText, targetText:targetText}})
     }
 
     return(
@@ -53,7 +65,9 @@ const ViewerTable = (props) =>{
                     {
                         entries.map((entry,index) =>(
                             <ViewerEntry 
-                                data={entry}
+                                data={entry} index={index}
+                                delete={entry.region == props.data._id ? true : false}
+                                removeLandmark={removeLandmark} editLandmark={editLandmark}
                             />
                         ))
                     }
@@ -63,7 +77,7 @@ const ViewerTable = (props) =>{
             </WLMain>
         
             <WLFooter>
-                <form onSubmit={handleAddLandmark}>
+                <form onSubmit={addLandmark}>
                     <WRow>
                         <WCol size="1">
                             <WButton 

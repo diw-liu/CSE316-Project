@@ -9,8 +9,6 @@ const ViewerInfo = (props) =>{
         props.handleSetActive(data.parent);
         props.toggleViewer('');
     } 
-
-    console.log(data)
     return(
         <WLayout WLayout="header-footer" > 
             <WLHeader>

@@ -26,8 +26,9 @@ const SpreadHead = (props) =>{
     
     const handleCreateList =  async (e) =>{
         const id = await props.addMapList("Untitled", props.activeList._id)
-        props.updateMapList(props.activeList._id, "child", id, true);
     }
+   
+
 
     return(
         <WRow className="table-header">
@@ -37,11 +38,11 @@ const SpreadHead = (props) =>{
                         <i className="material-icons">add</i>
                     </WButton>
 
-                    <WButton {...undoOptions}>
+                    <WButton  className={`${buttonStyle} sidebar-buttons`}  {...undoOptions}>
                             <i className="material-icons">undo</i>
                     </WButton>
 
-                    <WButton  {...redoOptions}>
+                    <WButton  className={`${buttonStyle} sidebar-buttons`}  {...redoOptions}>
                             <i className="material-icons">redo</i>
                     </WButton>
                 </div>

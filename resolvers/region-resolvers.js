@@ -27,32 +27,25 @@ module.exports = {
 			@returns {array} array of tuple [landmark, current (if the landmark is in the current region)]
 		**/
 		getLandmark: async (_, args) => {
-			console.log("Hello landmark")
+			// console.log("Hello landmark")
+			
 			const { _id } = args;
 			let landmark = [];
 			let region = [_id];
+
 			while(region.length!=0){
 				const objectId = new ObjectId(region[0]);
 				const found = await Region.findOne({_id:objectId});
-				if(found != null && found.child.length != 0){
+				// console.log(found);
+				if(found != null && found.child.length != 0)
 					region.push(...found.child);
-				}
-
-				if(found != null && found.landmarks.length != 0){
-					for(var i = 0; i<found.landmarks.length; i++){
-						if(objectId == _id){
-							landmark.push({landmark: found.landmarks[i], current: true});
-						} else {
-							landmark.push({landmark: found.landmarks[i], current: false});
-						}
-					}
-				}
+				if(found != null && found.landmarks.length != 0)
+					landmark.push(...found.landmarks)
 				region.shift();
 			}
-			if(landmark){
-				console.log(landmark);
-				return landmark;
-			}	
+
+			// console.log(landmark);
+			return landmark
 		},
 	},
     Mutation: {
@@ -64,10 +57,11 @@ module.exports = {
 		 addMapList: async (_, args) => {
 			console.log("dadads");
 			const { region } = args;
-			const objectId1 = new ObjectId();
+			// const objectId1 = new ObjectId();
 			const { _id, owner, parent, name, capital, leader, sortDirection, landmarks, child} = region;
+			const objectID = _id == "" ? new ObjectId(): new ObjectId(_id);
 			const newR = new Region({
-				_id: objectId1,
+				_id: objectID,
 				owner: owner,
 				parent: parent,
 				name: name,
@@ -77,9 +71,33 @@ module.exports = {
 				landmarks: landmarks,
 				child: child
 			});
+			console.log(newR)
+			if (parent != "Home" && _id==""){
+				const target = await Region.findOne({_id: parent});
+				var temp = [...target.child, objectID];
+				const updated = await Region.updateOne({_id: parent}, {child:temp});
+				if(updated) console.log("E")
+			}
+			// if(field=="child"){
+			// 	const target = await Region.findOne({_id: objectId});
+			// 	console.log(target)
+			// 	temp = [...target.child,value];
+			// }
+			// const updated = await Region.updateOne({_id: objectId}, {[field]:temp})
+			
+			// If the parent is not home
+			// let temp
+			// if (parent!="Home"){
+			// 	if(index!=-1){
+			// 		const target = await Region.findOne({_id: parent});
+			// 		temp = target.child.splice(index, 0, objectId1);
+			// 	}else {
+			// 		temp = [...target.child, objectId1];
+			// 	}
+			// 	const updated = await Region.updateOne({_id: objectId}, {child:temp});
+			// }
 			const updated = await newR.save();
 			if(updated) {
-				console.log(newR)
 				return newR;
 			}
 		},
@@ -90,23 +108,27 @@ module.exports = {
          * @return {boolean} 
          */
 		 removeMapList: async (_, args) => {
+			console.log("removew in caction")
 			const { _id } = args;
-			let deleteList = [];
+			const objectId = new ObjectId(_id);
+			const result = await Region.findOne({_id: objectId});
+
+			var deleteList = [];
 			deleteList.push(_id);
-			let flag;
+			var flag;
 			while(deleteList.length!=0){
-				console.log(deleteList[0])
 				const objectId = new ObjectId(deleteList[0]);
 				const found = await Region.findOne({_id: objectId});
-				console.log(found)
+
 				if(found != null && found.child.length!=0){
 					deleteList.push(...found.child);
 				}
+
 				flag = await Region.deleteOne({_id: objectId});
 				deleteList.shift();
 				if (flag) console.log("remove yes")
 			}
-			if(flag) return true;
+			if(flag) return result;
 			else return false;
 		},
 
@@ -193,20 +215,149 @@ module.exports = {
 		 * @param {object} args _id, text
 		 * @return {booleab} true if added sucessfully
 		 */
-		addLandmark: async (_, args) => {
-			const {_id, text} = args;
+		addLandmark: async (_, args) =>{
+			// console.log("Hello addlandmark")
+
+			const { _id, text } = args;
 			const regionId = new ObjectId(_id);
-			const found = await Region.findOne({_id:regionId});
-			// console.log(found.landmarks)
-			const final = [...found.landmarks, text]
-			console.log(final)
-			const updated = await Region.updateOne({_id:regionId},{landmarks:final})
-			if(updated) {
-				console.log(updated)
-				return true;
+			const Id 	   = new ObjectId();
+
+			console.log(text);
+
+			var found = await Region.findOne({_id: regionId})
+			// console.log(found);
+
+			let flag = true;
+			while(found){
+				console.log(found)
+				for(var i=0; i<found.landmarks.length;i++){
+					console.log(found.landmarks[i])
+					if(found.landmarks[i].name == text){
+						console.log("yes")
+						flag=false;
+					}
+				}
+				if(found.parent=="Home") break;
+				found = await Region.findOne({_id:found.parent});
+				console.log(found)
 			}
-		}
-    }
+			
+			found = await Region.findOne({_id: regionId})
+			var final = [...found.landmarks]
+			if(flag){
+				final = [...found.landmarks, {_id: Id, region: regionId, name: text }]
+			}
+			const updated = await Region.updateOne({_id: regionId}, {landmarks: final})
+
+			if(updated)	return true
+			return false
+		},
+
+		/**
+		 * @param {object} args _id, landmark_id
+		 * @return {booleab} true if added sucessfully
+		 */
+		removeLandmark: async (_, args) =>{
+			console.log("Hello remove");
+			const { _id, text } = args;
+			const regionId = new ObjectId(_id);
+			const found = await Region.findOne({_id:regionId})
+			console.log(found);
+			let landmarkList = found.landmarks;
+			landmarkList = landmarkList.filter(landmark => landmark.name !== text);
+			const updated = await Region.updateOne({_id: regionId}, { landmarks: landmarkList })
+			if(updated) return true;
+			else return false;
+		},
+
+		/**
+		 * @param {object} args _id, landmark_id
+		 * @return {booleab} true if added sucessfully
+		 */
+		 editLandmark: async (_, args) =>{
+			console.log("Hello edit");
+			const { _id, prevText, targetText } = args;
+			const regionId = new ObjectId(_id);
+			var   found = await Region.findOne({_id: regionId})
+			console.log(found);
+			// let flag = true; 
+			// for(var i=0;i<found.landmarks.length;i++){
+			// 	console.log(found.landmarks[i])
+			// 	if(found.landmarks[i].name == targetText){
+			// 		console.log("yes")
+			// 		flag=false;
+			// 	}
+			// }
+			let flag = true;
+			while(found){
+				console.log(found)
+				for(var i=0; i<found.landmarks.length;i++){
+					console.log(found.landmarks[i])
+					if(found.landmarks[i].name == targetText){
+						console.log("yes")
+						flag=false;
+					}
+				}
+				if(found.parent=="Home") break;
+				found = await Region.findOne({_id:found.parent});
+				console.log(found)
+			}
+
+			found = await Region.findOne({_id: regionId})
+			
+			var final = [...found.landmarks]
+			if(flag){
+				let landmarkList = found.landmarks;
+				landmarkList.map(landmark => {
+					if(landmark.name === prevText) {	
+						landmark.name = text;
+					}
+				});
+				final = landmarkList
+			}
+
+			const updated = await Region.updateOne({_id: regionId}, { landmarks: final })
+			if(updated) return true;
+			else return false;
+		},
+			// const { _id, text } = args;
+			// const regionId = new ObjectId(_id);
+			// const Id 	   = new ObjectId();
+			// // Get the target region
+			// let found = await Region.findOne({_id: regionId})
+			// console.log(found)
+
+			// let final = [...found.landmarks, {_id: Id, region: regionId, name: text }]
+			// console.log(final)
+			// let updated = await Region.updateOne({_id: regionId}, {landmarks: final})
+
+			// if(updated)	return true
+			// return false
+		
+	}
+		// addLandmark: async (_, args) => {
+		// 	console.log("add landmark")
+		// 	const {regionId, text} = args;
+		// 	const regionId = new ObjectId(regionId);
+		// 	console.log(regionId)
+
+		// 	let found = await Region.findOne({_id: regionId});
+		// 	console.log(found);
+
+		// 	let final = [...found.landmarks, {regionId: regionId, name:text}]
+		// 	let updated = await Region.updateOne({_id:regionId},{ landmarks : final})
+
+		// 	while(found.parent!="Home"){
+		// 		found = await Region.findOne({_id:found.parent});
+		// 		final = [...found.landmarks, {regionId: regionId, name:text}]
+		// 		updated = await Region.updateOne({_id:found._id},{landmarks:final})
+		// 	}
+
+		// 	if(updated) {
+		// 		return true;
+		// 	}
+		// }
+    
 	// Query: {
 	// 	/** 
 	// 	 	@param 	 {object} req - the request object containing a user id

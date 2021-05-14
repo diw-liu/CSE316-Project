@@ -149,7 +149,104 @@ export class UpdateListItems_Transaction extends jsTPS_Transaction {
 		return data;
     }
 }
+export class UpdateRegions_Transaction extends jsTPS_Transaction {
+    // opcodes: 0 - delete, 1 - add 
+    constructor(regionID, opcode, addfunc, delfunc, region = null){
+        super();
+        this.region = region;
+        this.regionID = regionID;
+        this.opcode = opcode;
+        this.addFunction = addfunc;
+        this.deleteFunction = delfunc;
+    }
+    async doTransaction() {
+		let data;
+        this.opcode === 0 ? { data } = await this.deleteFunction({
+                                        variables: { _id: this.regionID }})
+                          : { data } = await this.addFunction({
+                                        variables: { region: this.region}})  
+		if(this.opcode == 0) {
+            var temp = data.removeMapList;
+            this.region = {
+                _id: temp._id,
+                owner: temp.owner,
+                parent: temp.parent,
+                name: temp.name,
+                capital: temp.capital,
+                leader: temp.leader,
+                sortDirection: temp.sortDirection,
+                landmarks: temp.landmarks,
+                child: temp.child,
+                
+            }
+		}
+        if(this.opcode == 1) { 
+            this.regionID = data.addMapList._id;
+        }
+		return data;
+    }
+    async undoTransaction() {
+		let data;
+        this.opcode === 1 ? { data } = await this.deleteFunction({
+                                        variables: { _id: this.regionID }})
+                          : { data } = await this.addFunction({
+                                        variables: { region: this.region}})  
+        if(this.opcode == 0) {
+            this.regionID = data.addMapList._id;
+        }
+        if(this.opcode == 1) { 
+            var temp = data.removeMapList;
+            this.region = {
+                _id: temp._id,
+                owner: temp.owner,
+                parent: temp.parent,
+                name: temp.name,
+                capital: temp.capital,
+                leader: temp.leader,
+                sortDirection: temp.sortDirection,
+                landmarks: temp.landmarks,
+                child: temp.child,
+                
+            }
+        }
+		return data;
+    }
+}
+export class UpdateField_Transaction extends jsTPS_Transaction {
+    constructor(_id, field, prevValue, curValue, updFunc){
+        super();
+        this._id=_id;
+        this.field=field;
+        this.prevValue=prevValue;
+        this.curValue=curValue;
+        this.updateFunction=updFunc;
+    }
+    async doTransaction(){
+        const { data } = await this.updateFunction({ variables: { _id: this._id, field: this.field, value:this.curValue }})
+        return data;
+    }
+    async undoTransaction(){
+        const { data } = await this.updateFunction({ variables: { _id: this._id, field: this.field, value:this.prevValue }})
+        return data;
+    }
+}
+export class SortRegion_Transaction extends jsTPS_Transaction{
+    constructor(_id, field, sortFun) {
+        super();
+        this._id = _id;
+        this.field = field;
+        this.sortFunnction = sortFun;
+    }
+    async doTransaction() {
+		const { data } = await this.sortFunnction({ variables: {_id: this._id, field: this.field}});
+        return data;
+    }
 
+    async undoTransaction() {
+		const { data } = await this.sortFunnction({ variables: {_id: this._id, field: this.field}});
+        return data;
+    }
+}
 
 
 
