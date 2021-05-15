@@ -2,20 +2,35 @@ import React, { useState } 	from 'react';
 import ParentEntry          from './ParentEntry'
 import { WModal, WMHeader, WMMain, WMFooter, WButton, WInput, WRow, WCol } from 'wt-frontend';
 const ChangeParent = (props) =>{
-    
+  
     const [list, setlist] = useState({});
-    console.log(list)
+
     const parent = Object.entries(list).length !== 0 ? list._id : "Home"
     const displayRegion = props.totalMap.filter(map => map.parent == parent);
 
-    const disabledClick = () => {};
     const handleGoBack = async (e) =>{
-        const temp = props.totalMap.filter(map => map._id == list.parent )
+        console.log("cakk");
+        console.log(list)
+        const temp =list.parent == "Home" ? {} : props.totalMap.filter(map => map._id == list.parent )[0]
         setlist(temp);
     }
     const handleAdd = async (e) =>{
         props.changeParent(list)
+        props.setShowParent(false)
     }
+    
+    const buttonStyle = props.disabled ? ' table-header-button-disabled ' : 'table-header-button ';
+    
+    const disabledClick = () => {};
+
+    const undoOptions = {
+        className: parent=="Home" ? ' table-header-button-disabled ' : 'table-header-button',
+        onClick: parent=="Home"  ? disabledClick : handleGoBack,
+        wType: "texted", 
+        clickAnimation: parent=="Home" ? "" : "ripple-light",  
+        shape: "rounded"
+    }
+    
     // const selectList = async (target) =>{
     //     console.log(target);
     //     setlist(target)
@@ -28,7 +43,7 @@ const ChangeParent = (props) =>{
                             Change Parent
                         </WCol>
                         <WCol size="4">
-                            <WButton  className={`sidebar-buttons`} onClick={handleGoBack} >
+                            <WButton  className={`${buttonStyle} sidebar-buttons`}  {...undoOptions} >
                                 <i className="material-icons">undo</i>
                             </WButton>
                         </WCol>

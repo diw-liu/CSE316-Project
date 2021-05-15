@@ -13,18 +13,32 @@ const Arrows = (props) => {
     const buttonStyle = flag ? ' table-header-button-disabled ' : 'table-header-button ';
     
     const handleBackward = async (e) =>{
+        var index = 0
         for(var i=0;i<parent.child.length;i++){
             if(parent.child[i+1] == activeList._id){
-                props.handleSetActive(parent.child[i], -1)
+                index = i;
             }
+        }
+        while(index > 0 && !props.totalMap.find(map => map._id == parent.child[index])){
+            index --;
+        }
+        if(index>= 0){
+            props.handleSetActive(parent.child[index], -1);
         }
     }
 
     const handleForward = async (e) =>{
+        var index = parent.child.length-1;
         for(var i=0;i<parent.child.length;i++){
             if(parent.child[i-1] == activeList._id){
-                props.handleSetActive(parent.child[i], -1)
+                index = i
             }
+        }
+        while(index < parent.child.length && !props.totalMap.find(map => map._id == parent.child[index])){
+            index ++;
+        }
+        if(index<parent.child.length){
+            props.handleSetActive(parent.child[index], -1);
         }
     }
 

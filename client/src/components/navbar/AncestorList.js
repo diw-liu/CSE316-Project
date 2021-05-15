@@ -26,7 +26,7 @@ const AncestorList = (props) => {
                     <WNavItem hoverAnimation="lighten">
                         {
                             clickedList.length > 1 
-                            ?<div  onClick={handleClickAn} value={clickedList.length-2}>{clickedList[clickedList.length-2].name+">"}</div>
+                            ?<div className="navbar-options" onClick={handleClickAn} value={clickedList.length-2}>{clickedList[clickedList.length-2].name+">"}</div>
                             :<div></div>
                         }    
                     </WNavItem>  

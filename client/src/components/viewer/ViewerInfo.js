@@ -4,7 +4,7 @@ import unav from './unavailable_pic.png';
 
 const ViewerInfo = (props) =>{
     const disabledClick = () => {};
-
+    console.log(props.disabled);
     const buttonStyle = props.disabled ? ' table-header-button-disabled ' : 'table-header-button ';
     const buttonOptions = props.activeid ? {shape:"rounded" } : {clickAnimation:"ripple-light" , shape:"rounded", color:"primary"};
 
@@ -27,7 +27,7 @@ const ViewerInfo = (props) =>{
     const data = props.data;
 
     const handleParent = async (e) =>{
-        props.handleSetActive(data.parent);
+        props.handleSetActive(data.parent, -2);
         props.toggleViewer('');
     } 
     return(

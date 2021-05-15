@@ -6,7 +6,7 @@ const SpreadSheet = (props) =>{
     // console.log(props.subMap)
     return(
         <div className='table' >
-            <SpreadHead activeList={props.activeList}  disabled={!props.activeList._id} 
+            <SpreadHead activeList={props.activeList}  disabled={props.disabled} 
                 addMapList={props.addMapList} updateMapList={props.updateMapList} 
                 canUndo={props.canUndo} canRedo={props.canRedo} undo={props.tpsUndo} redo={props.tpsRedo}/>
             <SpreadContent child={props.subMap} handleSetActive={props.handleSetActive} 

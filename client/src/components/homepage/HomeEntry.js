@@ -7,7 +7,6 @@ const HomeEntry = (props) =>{
     const [preEdit, setPreEdit] = useState(props.name);
     
     const handleDeleteMap = async (e) =>{
-        console.log(props.data)
         props.setShowDelete(props.data._id)
     } 
 
@@ -19,11 +18,10 @@ const HomeEntry = (props) =>{
     
     const handleRename = async (e) =>{
         handleEditing(e);
-        props.updateMapList(props.data._id, "name", e.target.value, false)
+        props.updateMapList(props.data._id, "name", preEdit, e.target.value)
     }
 
     const handleSpreadSheet = async (e) =>{
-        // console.log(props.data);
         props.handleSetActive(props.data._id);
     }
 
