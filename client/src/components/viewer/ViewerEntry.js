@@ -6,10 +6,10 @@ const ViewerEntry = (props) =>{
     const [nameFlag,toggleName] = useState(false);
 
     const handleRemoveLandmark = async (e) =>{
-        props.removeLandmark(props.data.name)
+        props.removeLandmark(props._id, props.data.name)
     }
     const handleEditName = async (e) =>{
-        props.editLandmark(props.data.name,e.target.value)
+        props.editLandmark(props._id, props.data.name,e.target.value)
         toggleName(false)
     }
     
@@ -47,26 +47,5 @@ const ViewerEntry = (props) =>{
         </WRow>
        
     )
-    // return(
-    //     <WRow className='table-entry'>
-    //         <WCol size="1">
-    //             {
-    //                 props.data.current ? 
-    //                 <div className='button-group'>
-    //                     <WButton className="table-entry-buttons" wType="texted">
-    //                         X 
-    //                     </WButton>
-    //                 </div>
-    //                 :
-    //                 <div></div>
-    //             }
-    //         </WCol>
-    //         <WCol size="11">
-    //             <div>
-    //                 {props.data.landmark}
-    //             </div>
-    //         </WCol>
-    //     </WRow>
-    // )
 }
 export default ViewerEntry;

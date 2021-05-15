@@ -106,6 +106,19 @@ export const EDIT_LANDMARK = gql`
 		editLandmark(_id:$_id, prevText:$prevText, targetText:$targetText)
 	}
 `;
+export const CHANGE_PARENT = gql`
+	mutation ChangeParent($parentID:String!, $childID:String!){
+		changeParent(parentID:$parentID, childID:$childID)
+	}
+`;
+
+
+
+
+
+
+
+
 
 export const ADD_ITEM = gql`
 	mutation AddItem($item: ItemInput!, $_id: String!, $index: Int!) {

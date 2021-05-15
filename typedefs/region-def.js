@@ -32,6 +32,7 @@ const typeDefs = gql `
         addLandmark(_id:String!, text:String!): Boolean
         removeLandmark(_id:String!, text:String!): Boolean
         editLandmark(_id:String!, prevText:String!, targetText:String!): Boolean
+        changeParent(parentID:String!, childID:String!):Boolean
         moveMapTop(_id:String!): Boolean
     }
 

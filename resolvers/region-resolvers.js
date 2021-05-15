@@ -27,9 +27,10 @@ module.exports = {
 			@returns {array} array of tuple [landmark, current (if the landmark is in the current region)]
 		**/
 		getLandmark: async (_, args) => {
-			// console.log("Hello landmark")
+			console.log("Hello landmark")
 			
 			const { _id } = args;
+			// console.log(_id)
 			let landmark = [];
 			let region = [_id];
 
@@ -216,33 +217,48 @@ module.exports = {
 		 * @return {booleab} true if added sucessfully
 		 */
 		addLandmark: async (_, args) =>{
-			// console.log("Hello addlandmark")
+			console.log("Hello addlandmark")
 
 			const { _id, text } = args;
-			const regionId = new ObjectId(_id);
-			const Id 	   = new ObjectId();
-
-			console.log(text);
-
-			var found = await Region.findOne({_id: regionId})
-			// console.log(found);
-
+		
+			let region = [_id];
 			let flag = true;
-			while(found){
+
+			// Check parent
+			while(region.length!=0 && region[0]!="Home"){
+				const objectId = new ObjectId(region[0]);
+				const found = await Region.findOne({_id:objectId});
 				console.log(found)
-				for(var i=0; i<found.landmarks.length;i++){
-					console.log(found.landmarks[i])
-					if(found.landmarks[i].name == text){
-						console.log("yes")
-						flag=false;
-					}
-				}
-				if(found.parent=="Home") break;
-				found = await Region.findOne({_id:found.parent});
-				console.log(found)
+				const contain = found.landmarks.filter(landmark => landmark.name == text);
+				if(contain.length!=0) flag=false;
+				region.push(found.parent)
+				region.shift();
+				console.log(region)
 			}
-			
-			found = await Region.findOne({_id: regionId})
+
+			// Check child
+			let landmark = [];
+			region = [_id];
+			console.log("Mark")
+			while(region.length!=0){
+				const objectId = new ObjectId(region[0]);
+				const found = await Region.findOne({_id:objectId});
+				console.log(found);
+				if(found != null && found.child.length != 0)
+					region.push(...found.child);
+				if(found != null && found.landmarks.length != 0)
+					landmark.push(...found.landmarks)
+				region.shift();
+			}
+			const contain = landmark.filter(landmark => landmark.name == text);
+			if(contain.length!=0) flag=false;
+
+			// Update landmark
+			const regionId  = new ObjectId(_id);
+			const found 	= await Region.findOne({_id: regionId})
+			const Id 	    = new ObjectId();
+
+			console.log(flag)
 			var final = [...found.landmarks]
 			if(flag){
 				final = [...found.landmarks, {_id: Id, region: regionId, name: text }]
@@ -263,8 +279,7 @@ module.exports = {
 			const regionId = new ObjectId(_id);
 			const found = await Region.findOne({_id:regionId})
 			console.log(found);
-			let landmarkList = found.landmarks;
-			landmarkList = landmarkList.filter(landmark => landmark.name !== text);
+			let landmarkList = found.landmarks.filter(landmark => landmark.name !== text);
 			const updated = await Region.updateOne({_id: regionId}, { landmarks: landmarkList })
 			if(updated) return true;
 			else return false;
@@ -277,49 +292,99 @@ module.exports = {
 		 editLandmark: async (_, args) =>{
 			console.log("Hello edit");
 			const { _id, prevText, targetText } = args;
-			const regionId = new ObjectId(_id);
-			var   found = await Region.findOne({_id: regionId})
-			console.log(found);
-			// let flag = true; 
-			// for(var i=0;i<found.landmarks.length;i++){
-			// 	console.log(found.landmarks[i])
-			// 	if(found.landmarks[i].name == targetText){
-			// 		console.log("yes")
-			// 		flag=false;
-			// 	}
-			// }
+			let region = [_id];
 			let flag = true;
-			while(found){
-				console.log(found)
-				for(var i=0; i<found.landmarks.length;i++){
-					console.log(found.landmarks[i])
-					if(found.landmarks[i].name == targetText){
-						console.log("yes")
-						flag=false;
-					}
-				}
-				if(found.parent=="Home") break;
-				found = await Region.findOne({_id:found.parent});
-				console.log(found)
+
+			// Check parent
+			while(region.length!=0 && region[0]!="Home"){
+				const objectId = new ObjectId(region[0]);
+				const found = await Region.findOne({_id:objectId});
+				// console.log(found)
+				const contain = found.landmarks.filter(landmark => landmark.name == targetText);
+				if(contain.length!=0) flag=false;
+				region.push(found.parent)
+				region.shift();
+				console.log(region)
 			}
 
+			// Check child
+			let landmark = [];
+			region = [_id];
+			console.log("Mark")
+			while(region.length!=0){
+				const objectId = new ObjectId(region[0]);
+				const found = await Region.findOne({_id:objectId});
+				console.log(found);
+				if(found != null && found.child.length != 0)
+					region.push(...found.child);
+				if(found != null && found.landmarks.length != 0)
+					landmark.push(...found.landmarks)
+				region.shift();
+			}
+			const contain = landmark.filter(landmark => landmark.name == targetText);
+			if(contain.length!=0) flag=false;
+
+			const regionId  = new ObjectId(_id);
 			found = await Region.findOne({_id: regionId})
-			
+
 			var final = [...found.landmarks]
 			if(flag){
-				let landmarkList = found.landmarks;
-				landmarkList.map(landmark => {
+				final.map(landmark => {
 					if(landmark.name === prevText) {	
-						landmark.name = text;
+						landmark.name = targetText;
 					}
 				});
-				final = landmarkList
 			}
 
 			const updated = await Region.updateOne({_id: regionId}, { landmarks: final })
 			if(updated) return true;
 			else return false;
 		},
+		/**
+		 * @param {object} args parentID, childID
+		 * @return {booleab} true if added sucessfully
+		 */
+		changeParent: async (_, args) =>{
+			console.log("Hello change parnet")
+			const {parentID, childID} = args
+			// Get childID
+			const childId = new ObjectId(childID);
+			const child = await Region.findOne({_id:childId})
+			
+			if(child.parent!="Home"){
+				// Get parent of ChildID
+				const prevId = new ObjectId(child.parent);
+				const prevPa = await Region.findOne({_id:prevId});
+				console.log(prevPa)
+
+				// Remove child childID from parent of childID
+				let childPrev = prevPa.child;
+				childPrev = childPrev.filter(child => child.toString() != childID);
+				const updated1 = await Region.updateOne( {_id:prevId}, {child:childPrev})
+				if(!updated1) return false
+			}
+			
+			// Change the child parent to new parent
+			var updated2
+			if(parentID=="Home"){ 
+				updated2 = await Region.updateOne( {_id:childId}, {parent:"Home"})
+				if(updated2) return true
+				return false
+			}
+			const parentId = new ObjectId(parentID);
+			updated2 = await Region.updateOne( {_id:childId}, {parent:parentId})
+			if(!updated2) return false
+
+			// Get region of parentID
+			const parent = await Region.findOne({_id:parentId})
+			
+			// Append ID of childID to region of parentID
+			let childNow = parent.child;
+			childNow = [...childNow, childId]
+			const updated3 = await Region.updateOne( {_id:parentId}, {child:childNow})
+			if(updated3) return true
+			return false;
+		}
 			// const { _id, text } = args;
 			// const regionId = new ObjectId(_id);
 			// const Id 	   = new ObjectId();

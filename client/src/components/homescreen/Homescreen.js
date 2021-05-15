@@ -2,23 +2,27 @@ import Logo 							from '../navbar/Logo';
 import NavbarOptions 					from '../navbar/NavbarOptions';
 import Arrows							from '../navbar/Arrows'
 import AncestorList						from '../navbar/AncestorList'
+
 import Login 							from '../modals/Login';
 import Delete 							from '../modals/Delete';
 import Update 							from '../modals/Update';
 import CreateAccount 					from '../modals/CreateAccount';
+import Parent							from '../modals/Parent';
+
 import ViewerContent					from '../viewer/ViewerContent';
 import HomePage							from '../homepage/HomePage';
 import MainContents 					from '../main/MainContents';
 import SpreadSheet						from '../main/SpreadSheet'
 import * as mutations 					from '../../cache/mutations';
-import { GET_DB_MAP} 					from '../../cache/queries';
+import { GET_DB_MAP} 		from '../../cache/queries';
 import React, { useState } 				from 'react';
 import { useMutation, useQuery } 		from '@apollo/client';
 import { WNavbar, WNavItem } 			from 'wt-frontend';
 import { WLayout, WLHeader, WLMain }	from 'wt-frontend';
 import { UpdateRegions_Transaction,
 	UpdateField_Transaction,
-	SortRegion_Transaction } 				from '../../utils/jsTPS';
+	SortRegion_Transaction,
+	ChangeParent_Transaction} 		from '../../utils/jsTPS';
 
 const Homescreen = (props) => {
 
@@ -79,15 +83,15 @@ const Homescreen = (props) => {
 			}
 		}
 	}
-	const mouseCheck = (e, callback) => {
-		console.log(e.button)
-		if(e.button==0){
+	const mouseCheck = (e, callback) =>{
+		if(e.target.getAttribute("class")!="table-text"){
 			setEditing({
 				index:-1,
 				field:""
 			})
 		}
 	}
+	
 	document.onkeydown = keyCombination;
 	document.onmousedown = mouseCheck;
 	const auth = props.user === null ? false : true;
@@ -105,7 +109,7 @@ const Homescreen = (props) => {
 	const [showCreate, toggleShowCreate] 	= useState(false);
 	const [showUpdate, toggleShowUpdate] 	= useState(false);
 	const [showDelete, toggleShowDelete]	= useState("");
-
+	const [showParent, toggleParent]		= useState(false);
 	const [canUndo, setCanUndo] = useState(props.tps.hasTransactionToUndo());
 	const [canRedo, setCanRedo] = useState(props.tps.hasTransactionToRedo());
 
@@ -133,33 +137,30 @@ const Homescreen = (props) => {
 			}
 	}
 
-
-	
-	// NOTE: might not need to be async
-	// const reloadList = () => {
-	// 	if (activeList._id) {
-	// 		refetch();
-	// 		console.log('heeadad');
-	// 		let tempID = activeList._id;
-	// 		console.log(totalMap);
-	// 		let list = totalMap.find(list => list._id === tempID);
-	// 		console.log(list);
-	// 		setActiveList(list);
-	// 		// refetch();
-	// 	}
-	// }
-
-	// const loadTodoList = (list) => {
-	// 	// props.tps.clearAllTransactions();
-	// 	// setCanUndo(props.tps.hasTransactionToUndo());
-	// 	// setCanRedo(props.tps.hasTransactionToRedo());
-	// 	setActiveList(list);
-	// }
-
 	const mutationOptions = {
 		refetchQueries: [{ query: GET_DB_MAP }], 
 		awaitRefetchQueries: true,
 	}
+
+
+	// let entries = []
+	// const { loadingL, errorL, dataL, refetchL } = useQuery(GET_LANDMARK, { variables: { _id : status.activeList._id } } );
+    
+    // if(loadingL) { console.log(loading, 'loading');  }
+	// if(errorL) { console.log(error, 'error'); }
+	// if(dataL) { 
+    //     entries = data.getLandmark;
+    //     console.log("call")
+    // }
+
+    // const landMarkmutationOptions = {
+	// 	refetchQueries: [{ query: GET_LANDMARK, variables: { _id: status.activeList._id }}], 
+	// 	awaitRefetchQueries: true,
+	// }
+
+    // const [AddLandmark]             = useMutation(mutations.ADD_LANDMARK, landMarkmutationOptions);
+    // const [RemoveLandmark]          = useMutation(mutations.REMOVE_LANDMARK, landMarkmutationOptions);
+    // const [EditLandmark]            = useMutation(mutations.EDIT_LANDMARK, landMarkmutationOptions);
 
 	const [ReorderTodoItems] 		= useMutation(mutations.REORDER_ITEMS, mutationOptions);
 	const [sortTodoItems] 		    = useMutation(mutations.SORT_ITEMS, mutationOptions);
@@ -175,7 +176,10 @@ const Homescreen = (props) => {
 	const [UpdateMapList]			= useMutation(mutations.UPDATE_MAP_LIST, mutationOptions);
 	const [MoveMapTop]				= useMutation(mutations.MOVE_MAP_TOP, mutationOptions);
 	const [SortMapList]				= useMutation(mutations.SORT_MAP_LIST, mutationOptions);
-	
+	const [ChangeParent]			= useMutation(mutations.CHANGE_PARENT, mutationOptions)
+	// const [AddLandmark]             = useMutation(mutations.ADD_LANDMARK, mutationOptions);
+    // const [RemoveLandmark]          = useMutation(mutations.REMOVE_LANDMARK, mutationOptions);
+    // const [EditLandmark]            = useMutation(mutations.EDIT_LANDMARK, mutationOptions);
 
 	const tpsUndo = async () => {
 		const ret = await props.tps.undoTransaction();
@@ -192,60 +196,6 @@ const Homescreen = (props) => {
 			setCanRedo(props.tps.hasTransactionToRedo());
 		}
 	}
-
-	// const addItem = async () => {
-	// 	let list = activeList;
-	// 	const items = list.items;
-	// 	const newItem = {
-	// 		_id: '',
-	// 		description: 'No Description',
-	// 		due_date: 'No Date',
-	// 		assigned_to: 'No One',
-	// 		completed: false
-	// 	};
-	// 	let opcode = 1;
-	// 	let itemID = newItem._id;
-	// 	let listID = activeList._id;
-	// 	let transaction = new UpdateListItems_Transaction(listID, itemID, newItem, opcode, AddTodoItem, DeleteTodoItem);
-	// 	props.tps.addTransaction(transaction);
-	// 	tpsRedo();
-	// };
-
-	// const deleteItem = async (item, index) => {
-	// 	let listID = activeList._id;
-	// 	let itemID = item._id;
-	// 	let opcode = 0;
-	// 	let itemToDelete = {
-	// 		_id: item._id,
-	// 		description: item.description,
-	// 		due_date: item.due_date,
-	// 		assigned_to: item.assigned_to,
-	// 		completed: item.completed
-	// 	}
-	// 	let transaction = new UpdateListItems_Transaction(listID, itemID, itemToDelete, opcode, AddTodoItem, DeleteTodoItem, index);
-	// 	props.tps.addTransaction(transaction);
-	// 	tpsRedo();
-
-	// };
-
-	// const editItem = async (itemID, field, value, prev) => {
-	// 	let flag = 0;
-	// 	if (field === 'completed') flag = 1;
-	// 	let listID = activeList._id;
-	// 	let transaction = new EditItem_Transaction(listID, itemID, field, prev, value, flag, UpdateTodoItemField);
-	// 	props.tps.addTransaction(transaction);
-	// 	tpsRedo();
-
-	// };
-
-	// const reorderItem = async (itemID, dir) => {
-	// 	let listID = activeList._id;
-	// 	let transaction = new ReorderItems_Transaction(listID, itemID, dir, ReorderTodoItems);
-	// 	props.tps.addTransaction(transaction);
-	// 	tpsRedo();
-
-	// };
-
 	const addMapList = async (name, parent) =>{
 		let region = {
 			_id: '',
@@ -283,14 +233,42 @@ const Homescreen = (props) => {
 		let transaction = new SortRegion_Transaction(_id, field, SortMapList)
 		props.tps.addTransaction(transaction);
 		tpsRedo();
-	
 	}
 
+	const changeParent = async (updateParent) =>{
+		console.log(status.activeList);
+		console.log(updateParent);
+		const prevParent = status.activeList.parent;
+		const updaParent =  Object.entries(updateParent).length !== 0 ? updateParent._id : "Home"
+		const childID = status.activeList._id;
+		console.log(prevParent)
+		console.log(updaParent)
+		console.log(childID)
+		let transaction = new ChangeParent_Transaction(childID, prevParent, updaParent, ChangeParent)
+		props.tps.addTransaction(transaction);
+		tpsRedo();
+	}
+	// const addLandmark = async (_id, text) =>{
+	// 	let transaction = new UpdateLandmark_Transaction(_id, text, AddLandmark, RemoveLandmark, 1)
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
+	// }
+	// const removeLandmark = async (_id, text) =>{
+    //     let transaction = new UpdateLandmark_Transaction(_id, text, AddLandmark, RemoveLandmark, 0)
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
+    // }
+	// const editLandmark = async (_id, prevText, targetText) =>{
+	// 	let transaction = new EditLandmark_Transaction(_id, prevText, targetText, EditLandmark)
+	// 	props.tps.addTransaction(transaction);
+	// 	tpsRedo();
+	// }
 	
 	const setShowLogin = () => {
 		toggleShowDelete("");
 		toggleShowCreate(false);
 		toggleShowUpdate(false);
+		toggleParent(false);
 		toggleShowLogin(!showLogin);
 	};
 
@@ -298,6 +276,7 @@ const Homescreen = (props) => {
 		toggleShowDelete("");
 		toggleShowLogin(false);
 		toggleShowUpdate(false);
+		toggleParent(false);
 		toggleShowCreate(!showCreate);
 	};
 
@@ -305,6 +284,7 @@ const Homescreen = (props) => {
 		toggleShowCreate(false);
 		toggleShowLogin(false);
 		toggleShowUpdate(false);
+		toggleParent(false);
 		toggleShowDelete(_id)
 	};
 
@@ -312,9 +292,31 @@ const Homescreen = (props) => {
 		toggleShowDelete("");
 		toggleShowCreate(false);
 		toggleShowLogin(false);
+		toggleParent(false);
 		toggleShowUpdate(!showUpdate)
 	};
-	
+
+	const setShowParent = () =>{
+		toggleShowDelete("");
+		toggleShowCreate(false);
+		toggleShowLogin(false);
+		toggleShowUpdate(false)
+		toggleParent(!showParent);
+	}
+	// const addLandmark = async (_id, text) =>{
+    //     // e.preventDefault();
+    //     // // console.log("handle alm");
+    //     // const { data } = await AddLandmark({ variables:{_id: props.data._id, text: landmark}});
+    //     // changeLandmark("Enter Landmark Here");
+    // }
+	// const removeLandmark = async (text) =>{
+    //     // console.log("Atleast we are here")
+    //     // console.log(props.data._id);
+    //     const {data} = await RemoveLandmark({ variables:{ _id: props.data._id, text: text}});
+    // }
+    // const editLandmark = async (prevText, targetText) =>{
+    //     const {data} = await EditLandmark({variables:{_id: props.data._id, prevText: prevText, targetText:targetText}})
+    // }
 	// const sort = (criteria) => {
 	// 	let prevSortRule = sortRule;
 	// 	setSortRule(criteria);
@@ -349,7 +351,8 @@ const Homescreen = (props) => {
 			setStatus({
 				activeList:data,
 				clickedMap:temp,
-			})		
+			})
+			refetch();		
 		}
 	}
 	
@@ -385,24 +388,24 @@ const Homescreen = (props) => {
 								<div className="container-secondary" style={{padding:"1% 3% 3% 3%"}}>
 									<ViewerContent activeList={status.activeList} viewer={viewer}
 										handleSetActive={handleSetActive} toggleViewer={toggleViewer}
-										
+										setShowParent={setShowParent} tps={props.tps}
+										canUndo={canUndo} canRedo={canRedo} 
+										tpsUndo={tpsUndo} tpsRedo={tpsRedo}
 									/>
 								
 								</div>
 								:
 								<div className="container-secondary center" style={{padding:"1% 3% 3% 3%"}}>
-									<SpreadSheet activeList={status.activeList} subMap={subMap}  editing={editing}
-										canUndo={canUndo} canRedo={canRedo} setEditing={setEditing} tpsUndo={tpsUndo} tpsRedo={tpsRedo}
-										toggleViewer={toggleViewer}  setShowDelete={setShowDelete}
-										addMapList={addMapList} updateMapList={updateMapList}	
-										sortMapList={sortMapList} handleSetActive={handleSetActive} 	
+									<SpreadSheet activeList={status.activeList} subMap={subMap} editing={editing} setEditing={setEditing}
+										canUndo={canUndo} canRedo={canRedo} tpsUndo={tpsUndo} tpsRedo={tpsRedo}
+										toggleViewer={toggleViewer}  setShowDelete={setShowDelete} handleSetActive={handleSetActive} 
+										addMapList={addMapList} updateMapList={updateMapList} sortMapList={sortMapList} 	
 									/>
 								</div>
 							:
 							<div className="container-secondary">
 								<div className=" center" >
-									<HomePage  maplists={homeMap} activeList={status.activeList} setShowDelete={setShowDelete}	
-										handleSetActive={handleSetActive} 	  
+									<HomePage  maplists={homeMap} activeList={status.activeList} setShowDelete={setShowDelete} handleSetActive={handleSetActive} 	  
 										removeMapList={removeMapList} updateMapList={updateMapList} addMapList={addMapList}
 									/>
 								</div>	
@@ -429,6 +432,9 @@ const Homescreen = (props) => {
 			}
 			{
 				showDelete && (<Delete showDelete={showDelete} setShowDelete={setShowDelete} removeMapList={removeMapList}/>)
+			}
+			{
+				showParent && (<Parent showDelete={showDelete} setShowParent={setShowParent} changeParent={changeParent} totalMap={totalMap}/>)
 			}
 
 		</WLayout>

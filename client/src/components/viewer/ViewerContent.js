@@ -10,13 +10,18 @@ const ViewerContent = (props) =>{
                 <WCol size='6'>
                     <WLMain>
                         <ViewerInfo data={props.activeList} viewer={props.viewer} 
-                            handleSetActive={props.handleSetActive} toggleViewer={props.toggleViewer}/>
+                            handleSetActive={props.handleSetActive} toggleViewer={props.toggleViewer}
+                            setShowParent={props.setShowParent} 
+                            canUndo={props.canUndo} canRedo={props.canRedo} 
+                            undo={props.tpsUndo} redo={props.tpsRedo}/>
                     </WLMain>
                 </WCol>
                 <WCol size='6'>
                     <WLSide>
                         <ViewerTable data={props.activeList} totalMap={props.totalMap}
-                            addLandmark={props.addLandmark}/>
+                            tps={props.tps} tpsUndo={props.tpsUndo} tpsRedo={props.tpsRedo}
+                            viewer={props.viewer} 
+                            />
                     </WLSide>
                 </WCol>
             </WRow>

@@ -235,19 +235,84 @@ export class SortRegion_Transaction extends jsTPS_Transaction{
         super();
         this._id = _id;
         this.field = field;
-        this.sortFunnction = sortFun;
+        this.sortFunction = sortFun;
     }
     async doTransaction() {
-		const { data } = await this.sortFunnction({ variables: {_id: this._id, field: this.field}});
+		const { data } = await this.sortFunction({ variables: {_id: this._id, field: this.field}});
         return data;
     }
 
     async undoTransaction() {
-		const { data } = await this.sortFunnction({ variables: {_id: this._id, field: this.field}});
+		const { data } = await this.sortFunction({ variables: {_id: this._id, field: this.field}});
+        return data;
+    }
+}
+export class ChangeParent_Transaction extends jsTPS_Transaction{
+    constructor(childID, prevParent, updaParent, ChangeParent) {
+        super();
+        this.childID = childID;
+        this.prevParent = prevParent;
+        this.updaParent = updaParent
+        this.changeFunction = ChangeParent;
+    }
+    async doTransaction() {
+        console.log("Here at trans")
+		const { data } = await this.changeFunction({ variables: {parentID: this.updaParent, childID: this.childID}});
+        return data;
+    }
+
+    async undoTransaction() {
+		const { data } = await this.changeFunction({ variables: {parentID: this.prevParent, childID: this.childID}});
         return data;
     }
 }
 
+export class UpdateLandmark_Transaction extends jsTPS_Transaction{
+    // Opecode 0 delete, Opecode 1 add
+    constructor(_id, text, addfunc, delfunc, opcode){
+        super()
+        this._id = _id;
+        this.text = text;
+        this.addFunction = addfunc;
+        this.deleteFunction = delfunc;
+        this.opcode = opcode;
+    }
+    async doTransaction() {
+        let data;
+        this.opcode === 0 ? { data } = await this.deleteFunction({
+                            variables:{_id: this._id, text: this.text}})
+                          : { data } = await this.addFunction({
+                            variables:{_id: this._id, text: this.text}})
+        return data
+    }
+    async undoTransaction() {
+        let data;
+        this.opcode === 1 ? { data } = await this.deleteFunction({
+                            variables:{_id: this._id, text: this.text}})
+                          : { data } = await this.addFunction({
+                            variables:{_id: this._id, text: this.text}})
+        return data
+    }
+}
+
+export class EditLandmark_Transaction extends jsTPS_Transaction{
+    // Opecode 0 delete, Opecode 1 add
+    constructor(_id, prevText, targetText, edfunc){
+        super()
+        this._id = _id;
+        this.prevText = prevText;
+        this.targetText = targetText;
+        this.editFunction = edfunc;
+    }
+    async doTransaction() {
+        const { data } = await this.editFunction({ variables:{_id: this._id, prevText: this.prevText, targetText: this.targetText}})
+        return data
+    }
+    async undoTransaction() {
+        const { data } = await this.editFunction({ variables:{_id: this._id, prevText: this.targetText, targetText: this.prevText}})
+        return data
+    }
+}
 
 
 export class jsTPS {
