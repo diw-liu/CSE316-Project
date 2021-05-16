@@ -25,7 +25,7 @@ const SpreadHead = (props) =>{
     }
     
     const handleCreateList =  async (e) =>{
-        const id = await props.addMapList("Untitled", props.activeList._id)
+        props.addMapList("Untitled", props.activeList._id)
     }
    
 

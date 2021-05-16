@@ -11,7 +11,6 @@ import Parent							from '../modals/Parent';
 
 import ViewerContent					from '../viewer/ViewerContent';
 import HomePage							from '../homepage/HomePage';
-import MainContents 					from '../main/MainContents';
 import SpreadSheet						from '../main/SpreadSheet'
 import * as mutations 					from '../../cache/mutations';
 import { GET_DB_MAP} 		from '../../cache/queries';
@@ -144,7 +143,6 @@ const Homescreen = (props) => {
 	const [AddMapList]				= useMutation(mutations.ADD_MAP_LIST, mutationOptions);
 	const [RemoveMapList]			= useMutation(mutations.REMOVE_MAP_LIST, mutationOptions);
 	const [UpdateMapList]			= useMutation(mutations.UPDATE_MAP_LIST, mutationOptions);
-	
 	const [SortMapList]				= useMutation(mutations.SORT_MAP_LIST, mutationOptions);
 	const [ChangeParent]			= useMutation(mutations.CHANGE_PARENT, mutationOptions)
 
@@ -328,6 +326,7 @@ const Homescreen = (props) => {
 										toggleViewer={toggleViewer}  setShowDelete={setShowDelete} handleSetActive={handleSetActive} 
 										addMapList={addMapList} updateMapList={updateMapList} sortMapList={sortMapList} 	
 										disabled={props.tps.getSize()==0 ? true : false}
+										refetch={refetch}
 									/>
 								</div>
 							:

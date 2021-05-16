@@ -2,6 +2,7 @@ import React            from 'react';
 import { WRow, WCol, WButton } from 'wt-frontend';
 
 const SpreadBar = (props) =>{
+    
     return(
         <WRow className="table-header" style={{ backgroundColor: "#AD0E0E" }}>
             <WCol size="1"> </WCol>

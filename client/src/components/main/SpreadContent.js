@@ -20,7 +20,7 @@ const SpreadContent = (props) =>{
 
     return(
         <div className='table '> 
-            <SpreadBar activeList={props.activeList} sortMapList={props.sortMapList}/>
+            <SpreadBar activeList={props.activeList} sortMapList={props.sortMapList}  refetch={props.refetch}/>
             {   
                 entries !== undefined && entries.length > 0 ?
                 <div className=' table-entries container-primary'>
